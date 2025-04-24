@@ -15,18 +15,20 @@ return new class extends Migration
             $table->id();
             $table->string('first_name');
             $table->string('last_name');
-            $table->string('phone_number');
             $table->string('gender');
+            $table->string('phone_number');
+            $table->string('password');
+            $table->boolean('is_patient')->default(false);
             $table->timestamps();
         });
 
-        Schema::create('doctor_patient', function (Blueprint $table) {
+        Schema::create('doctor_patient', function (Blueprint $table) {  ///pivot table between patients and doctors
             $table->id();
             $table->foreignId('doctor_id')->constrained('doctors');
             $table->foreignId('patient_id')->constrained('patients');
             $table->date('date');
             $table->time('time');
-            $table->string('status');
+//            $table->string('status');
             $table->timestamps();
         });
     }

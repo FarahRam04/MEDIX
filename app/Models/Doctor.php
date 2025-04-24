@@ -4,13 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Sanctum\HasApiTokens;
 
 class Doctor extends Model
 {
     /** @use HasFactory<\Database\Factories\DoctorFactory> */
-    use HasFactory;
-
-    use HasFactory;
+    use HasFactory,HasApiTokens;
 
     protected $guarded = [];
 
