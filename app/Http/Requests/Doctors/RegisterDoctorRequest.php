@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Doctors;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class LoginRequest extends FormRequest
+class RegisterDoctorRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,8 +22,11 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'phone_number' => 'required',
-            'password' => 'required|string',
+            'first_name'=>'required',
+            'last_name'=>'required',
+            'phone_number'=>'required|unique:doctors,phone_number|digits:10|numeric',
+            'password'=>'required|confirmed|min:8',
+            'department_id'=>'required',
         ];
     }
 }

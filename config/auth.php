@@ -16,8 +16,8 @@ return [
     'defaults' => [
         'guard' => env('AUTH_GUARD', 'web'),
         'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
-    ],
 
+    ],
     /*
     |--------------------------------------------------------------------------
     | Authentication Guards
@@ -40,9 +40,13 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-        'patient' => [
+        'doctor' => [
+            'driver' => 'sanctum',
+            'provider' => 'doctors',
+        ],
+        'admin' => [
             'driver' => 'session',
-            'provider' => 'patients',
+            'provider' => 'admins',
         ],
     ],
 
@@ -70,9 +74,13 @@ return [
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
 
-        'patients' => [
+        'doctors' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Patient::class,
+            'model' => App\Models\Doctor::class,
+        ],
+        'admins' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Admin::class,
         ],
     ],
 

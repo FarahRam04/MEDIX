@@ -16,7 +16,18 @@ return new class extends Migration
             $table->string('first_name');
             $table->string('last_name');
             $table->string('phone_number');
+            $table->string('password');
             $table->foreignId('department_id')->constrained('departments')->cascadeOnDelete();
+            $table->timestamps();
+        });
+
+        Schema::create('doctor_user', function (Blueprint $table) {  ///pivot table between patients and doctors
+            $table->id();
+            $table->foreignId('doctor_id')->constrained('doctors');
+            $table->foreignId('user_id')->constrained('users');
+            $table->date('date');
+            $table->time('time');
+//            $table->string('status');
             $table->timestamps();
         });
     }
@@ -27,5 +38,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('doctors');
+        Schema::dropIfExists('doctor_user');
+
     }
 };
