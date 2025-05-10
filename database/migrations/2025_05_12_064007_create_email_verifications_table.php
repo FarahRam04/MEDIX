@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('employees', function (Blueprint $table) {
+        Schema::create('email_verifications', function (Blueprint $table) {
             $table->id();
-            $table->string('first_name');
-            $table->string('last_name');
             $table->string('email')->unique();
-            $table->string('password');
-            $table->string('role');
-            $table->unsignedBigInteger('salary');
+            $table->string('code');
+            $table->boolean('is_verified')->default(false);
+            $table->timestamp('expires_at');
             $table->timestamps();
         });
     }
@@ -28,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('employees');
+        Schema::dropIfExists('email_verifications');
     }
 };

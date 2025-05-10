@@ -17,37 +17,47 @@ class EmployeeSeeder extends Seeder
     {
         $employees = [
             [
-                'name' => 'Dr. Omar',
+                'first_name' => 'Omar',
+                'last_name' => 'Hernandez',
                 'email' => 'omar@clinic.com',
                 'role' => 'doctor',
                 'password' => Hash::make('password'),
+                'salary' => 5000,
             ],
             [
-                'name' => 'Dr. Lina',
+                'first_name' => 'Lina',
+                'last_name' => 'Hernandez',
                 'email' => 'lina@clinic.com',
                 'role' => 'doctor',
                 'password' => Hash::make('password'),
+                'salary' => 5000,
             ],
             [
-                'name' => 'Aya Reception',
+                'first_name' => 'Aya ',
+                'last_name' => 'Hernandez',
                 'email' => 'aya@clinic.com',
                 'role' => 'receptionist',
                 'password' => Hash::make('password'),
+                'salary' => 5000,
             ],
             [
-                'name' => 'Rami Reception',
+                'first_name' => 'Rami Reception',
+                'last_name' => 'Hernandez',
                 'email' => 'rami@clinic.com',
                 'role' => 'receptionist',
                 'password' => Hash::make('password'),
+                'salary' => 5000,
             ],
         ];
 
         foreach ($employees as $emp) {
             $employee = Employee::create([
-                'name' => $emp['name'],
+                'first_name' => $emp['first_name'],
+                'last_name' => $emp['last_name'],
                 'email' => $emp['email'],
                 'password' =>$emp['password'],
-                'role' => $emp['role']
+                'role' => $emp['role'],
+                'salary' => $emp['salary'],
             ]);
             $employee->assignRole($emp['role']);
         }
