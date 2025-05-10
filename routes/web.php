@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Auth\AdminAuth;
+use App\Http\Controllers\Auth\AdminAndEmployeeAuth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -12,7 +12,7 @@ Route::get('/', function () {
 Route::get('/admin/login-form', function () {
     return view('admin.login');
 });
-Route::post('/admin/login', [AdminAuth::class, 'login'])->name('admin.login');
+Route::post('/admin/login', [AdminAndEmployeeAuth::class, 'login'])->name('admin.login');
 
 
 Route::middleware(['auth:admin'])->group(function () {

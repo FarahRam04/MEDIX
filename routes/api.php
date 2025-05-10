@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Auth\AdminAuth;
-use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\AdminAndEmployeeAuth;
+use App\Http\Controllers\Auth\UserController;
 use App\Http\Controllers\WhatsAppController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -13,19 +13,21 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 ///User Auth
-Route::post('/user_register',[AuthController::class,'register']);
-Route::post('/user_login',[AuthController::class,'login']);
-Route::post('/user_logout',[AuthController::class,'logout'])->middleware('auth:sanctum');
+Route::post('/user_register',[UserController::class,'register']);
+Route::post('/user_login',[UserController::class,'login']);
+Route::post('/user_logout',[UserController::class,'logout'])->middleware('auth:sanctum');
 
 //Admin ,doctor and receptionist login
 
-Route::post('/login', [AdminAuth::class, 'login']);//you can hide anything in Employee or Admin Model
+Route::post('/login', [AdminAndEmployeeAuth::class, 'login']);//you can hide anything in Employee or Admin Model
 
 //routs only for admins
-Route::middleware(['web','auth:sanctum','is_admin'])->group(function () {
+Route::middleware(['auth:sanctum','is_admin'])->group(function () {
     Route::get('/admin-only', function () {
         return response()->json(['message' => 'Welcome Admin']);
     });
+
+    Route::post('/add_employee',[AdminAndEmployeeAuth::class, 'addEmployee']);
 });
 
 //routs only for employees
