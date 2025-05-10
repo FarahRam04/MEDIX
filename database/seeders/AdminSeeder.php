@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Admin;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -14,10 +15,23 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('admins')->insert([
-            'name' => 'admin',
-            'email' => 'admin@gmail.com',
-            'password' => Hash::make('password'),
-        ]);
+        $admins=[
+            [
+                'name'=>'admin',
+                'email'=>'admin@gmail.com',
+                'password'=>Hash::make('password'),
+                'role'=>'admin'
+            ],
+        ];
+
+        foreach ($admins as $admin) {
+            $admin=Admin::create([
+                'name'=>$admin['name'],
+                'email'=>$admin['email'],
+                'password'=>$admin['password'],
+                'role'=>$admin['role']
+            ]);
+           $admin->assignRole($admin['role']);
+        }
     }
 }

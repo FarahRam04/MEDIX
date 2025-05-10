@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('last_name');
             $table->string('gender');
             $table->string('phone_number');
+            $table->string('email');
             $table->string('password');
             $table->boolean('is_patient')->default(false);
             $table->timestamps();

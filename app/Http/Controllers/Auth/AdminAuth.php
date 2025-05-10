@@ -10,28 +10,58 @@ use Illuminate\Support\Facades\Auth;
 
 class AdminAuth extends Controller
 {
-    public function login(LoginAdminRequest $request)
-    {
+    public function login(Request $request)
 
-        if (!Auth::guard('admin')->attempt($request->only('email', 'password'))) { //attempt to authenticate the user=>Auth::user = this user
-            return response()->json(['message' => 'Invalid email or password'], 401);
+    {
+        $credentials = $request->only('email', 'password');
+
+        if (Auth::guard('admin')->attempt($credentials)) {
+            $admin = Auth::guard('admin')->user();
+            $token = $admin->createToken('auth_token')->plainTextToken;
+            return response()->json([
+                'status' => true,
+                'user_type' => $admin->getRoleNames()->first(),
+                'user' => $admin,
+                'token' => $token,
+            ])->withCookie(cookie('laravel_session', session()->getId(),60));
+
+        }
+
+        if (Auth::guard('employee')->attempt($credentials)) {
+            $employee = Auth::guard('employee')->user();
+            $token = $employee->createToken('auth_token')->plainTextToken;
+            return response()->json([
+                'status' => true,
+                'user_type' => $employee->getRoleNames()->first(),
+                'user' => $employee,
+                'token' => $token,
+            ]);
         }
 
         return response()->json([
-            'message' => 'Login successfully',
-            'user' => Auth::guard('admin')->user(),
-        ]);
+            'status' => false,
+            'message' => 'Invalid credentials',
+        ], 401)->withCookie(cookie('laravel_session', session()->getId(),60));
     }
 
-    public function logout(Request $request)
-    {
-        Auth::guard('admin')->logout();
+//    public function login(Request $request)
+//    {
+//        $credentials = $request->only('email', 'password');
+//
+//        if (Auth::guard('admin')->attempt($credentials)) {
+//            $admin = Auth::guard('admin')->user();
+//            return redirect()->intended('/admin/dashboard');
+//        }
+//
+//        if (Auth::guard('employee')->attempt($credentials)) {
+//            $employee = Auth::guard('employee')->user();
+//            return redirect()->intended('/employee/dashboard');
+//        }
+//
+//        return back()->withErrors([
+//            'email' => 'بيانات الدخول غير صحيحة.',
+//        ])->onlyInput('email');
+//    }
 
-        $request->session()->invalidate(); // بيلغي الجلسة القديمة نهائياً
-        $request->session()->regenerateToken(); // بيولد CSRF Token جديد لزيادة الأمان
 
-        return response()->json([
-            'message' => 'Logout successfully'
-        ]);
-    }
 }
