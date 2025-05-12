@@ -13,5 +13,12 @@ class Employee extends Authenticatable
     protected $guard_name = 'employee';
     protected $guarded = [];
     protected $hidden = ['password','created_at','updated_at','role'];
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
 }
 

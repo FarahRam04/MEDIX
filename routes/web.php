@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Auth\AdminAndEmployeeAuth;
+use App\Http\Controllers\Dashboard\AdminAndEmployeeAuth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {

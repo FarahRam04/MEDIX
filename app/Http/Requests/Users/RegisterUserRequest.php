@@ -25,9 +25,11 @@ class RegisterUserRequest extends FormRequest
             'first_name'=>'required',
             'last_name'=>'required',
             'gender'=>'required',
+            'birth_date'=>'required|string',
             'phone_number'=>'required|unique:users,phone_number|digits:10|numeric',
             'email'=>'required|unique:users,email|email|max:255',
-            'password'=>'required|confirmed|min:8'
+            'password'=>'required|confirmed|min:8',
+            'image'=>'required|image|mimes:jpeg,png,jpg,gif|max:2048'
         ];
     }
 }
