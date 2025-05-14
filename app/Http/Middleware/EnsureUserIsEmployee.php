@@ -19,7 +19,7 @@ class EnsureUserIsEmployee
         // تحقق إن المستخدم Authenticated
         $user = $request->user();
 
-        // هنا الشرط المهم: هل المستخدم من جدول الإدمنز؟
+        // هنا الشرط المهم: هل المستخدم من جدول employee؟
         if (! $user || get_class($user) !== Employee::class) {
             return response()->json(['message' => 'Unauthorized. Employee only.'], 403);
         }

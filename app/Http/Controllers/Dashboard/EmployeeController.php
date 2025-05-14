@@ -7,7 +7,7 @@ use App\Http\Requests\AdminAndEmployee\AddEmployeeRequest;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 
-class AdminAndEmployeeController extends Controller
+class EmployeeController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -20,9 +20,22 @@ class AdminAndEmployeeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(AddEmployeeRequest $request)
     {
-        //
+        if (!in_array($request->role, ['doctor', 'receptionist'])) {   //doesn't matter because there is a drop_down list to choice a role
+            return response()->json(['message' => 'This is an invalid role'], 422);
+        }
+
+        $employee = Employee::create($request->validated());
+        $employee->assignRole($request->role);
+        if ($employee->role === 'doctor') {
+            $doctor=$employee->doctor()->create();
+        }
+
+        return response()->json([
+            'message' => 'Employee added successfully',
+            'role' => $employee->getRoleNames()->first(),
+        ]);
     }
 
     /**
@@ -49,22 +62,6 @@ class AdminAndEmployeeController extends Controller
         //
     }
 
-    public function addEmployee(AddEmployeeRequest $request)
-    {
-        if (!in_array($request->role, ['doctor', 'receptionist'])) {   //doesnt matter because there is a drop_down list to choice a role
-            return response()->json(['message' => 'This is an invalid role'], 422);
-        }
 
-        $employee = Employee::create($request->validated());
-        $employee->assignRole($request->role);
-        if ($employee->role === 'doctor') {
-            $employee->doctor()->create();
-        }
-
-        return response()->json([
-            'message' => 'Employee added successfully',
-            'role' => $employee->getRoleNames()->first(),
-        ]);
-    }
 
 }

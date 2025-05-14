@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Dashboard\AdminAndEmployeeAuth;
-use App\Http\Controllers\Dashboard\AdminAndEmployeeController;
+use App\Http\Controllers\Dashboard\EmployeeController;
 use App\Http\Controllers\Dashboard\DoctorController;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\User\UserControllerAuth;
@@ -28,9 +28,9 @@ Route::post('/login', [AdminAndEmployeeAuth::class, 'login']);//you can hide any
 
 //routs only for admins
 Route::middleware(['auth:sanctum','is_admin'])->group(function () {
-    Route::post('/add_employee',[AdminAndEmployeeController::class, 'addEmployee']);
+    Route::post('/add_employee',[EmployeeController::class, 'store']);//add employee
     Route::get('/users',[UserController::class, 'index']);//get all users
-    Route::get('/doctors',[DoctorController::class, 'index']);//get all doctors
+    Route::get('/doctors',[DoctorController::class, 'index']);//get all doctors with all relationships
 });
 
 //routs only for employees
@@ -38,6 +38,12 @@ Route::middleware(['auth:sanctum','is_employee'])->group(function () {
     Route::get('/employee-only', function () {
         return response()->json(['message' => 'Welcome Employee']);
     });
+});
+
+//routes only for doctors
+
+Route::middleware(['auth:sanctum','is_doctor'])->group(function () {
+    Route::post('/update_profile',[DoctorController::class, 'update']);
 });
 
 //WhatsApp

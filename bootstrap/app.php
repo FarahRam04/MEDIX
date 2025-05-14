@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureUserIsAdmin;
+use App\Http\Middleware\EnsureUserIsDoctor;
 use App\Http\Middleware\EnsureUserIsEmployee;
 use App\Http\Middleware\is_user;
 use Illuminate\Foundation\Application;
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'is_admin'=> EnsureUserIsAdmin::class,
             'is_employee'=>EnsureUserIsEmployee::class,
             'is_user'=> is_user::class,
+            'is_doctor'=>EnsureUserIsDoctor::class,
             ]);
 
     })

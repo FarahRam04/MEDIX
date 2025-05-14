@@ -2,12 +2,12 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class is_user
+class EnsureUserIsDoctor
 {
     /**
      * Handle an incoming request.
@@ -18,12 +18,9 @@ class is_user
     {
         // تحقق إن المستخدم Authenticated
         $user = $request->user();
-
-        // هنا الشرط المهم: هل المستخدم من جدول users؟
-        if (! $user || get_class($user) !== User::class) {
-            return response()->json(['message' => 'Unauthorized. Users only.'], 403);
+        if ($user && $user->hasRole('doctor')) {
+            return $next($request);
         }
-
-        return $next($request);
+        return response()->json('Unauthorized,only doctors');
     }
 }

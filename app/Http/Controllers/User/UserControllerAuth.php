@@ -58,7 +58,7 @@ class UserControllerAuth extends Controller
             return response()->json(['message' => 'Invalid email or password'], 401);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('auth_token for U.'. $user->first_name)->plainTextToken;
 
         return response()->json([
             'message' => 'Login successfully',
@@ -70,7 +70,7 @@ class UserControllerAuth extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $request->user()->tokens()->delete();
 
         return response()->json([
             'message' => 'logout successfully',
