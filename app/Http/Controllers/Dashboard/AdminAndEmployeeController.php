@@ -57,6 +57,9 @@ class AdminAndEmployeeController extends Controller
 
         $employee = Employee::create($request->validated());
         $employee->assignRole($request->role);
+        if ($employee->role === 'doctor') {
+            $employee->doctor()->create();
+        }
 
         return response()->json([
             'message' => 'Employee added successfully',

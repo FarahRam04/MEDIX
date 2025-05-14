@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\EnsureUserIsEmployee;
+use App\Http\Middleware\is_user;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,7 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'is_admin'=> EnsureUserIsAdmin::class,
-            'is_employee'=>EnsureUserIsEmployee::class
+            'is_employee'=>EnsureUserIsEmployee::class,
+            'is_user'=> is_user::class,
             ]);
 
     })

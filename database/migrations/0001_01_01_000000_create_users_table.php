@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('email');
             $table->string('password');
             $table->boolean('is_patient')->default(false);
+            $table->string('image')->nullable();
             $table->timestamps();
         });
 
