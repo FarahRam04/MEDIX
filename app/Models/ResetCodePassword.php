@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ResetCodePassword extends Model
 {
-    protected $fillable = ['email', 'code', 'created_at'];
-
+    protected $fillable = ['email', 'code',  'expires_at'];
+    public $timestamps = true;
+    protected $dates = ['expires_at'];
 }

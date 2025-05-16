@@ -17,7 +17,15 @@ EmailController extends Controller
 
     public function sendCode(Request $request)
     {
-        $request->validate(['email' => 'required|email']);
+        $request->validate(['email' => 'required|email|unique:users,email']);
+
+        $existing = EmailVerification::where('email', $request->email)->first();
+
+        if ($existing && $existing->updated_at > now()->subSeconds(30)) {
+            return response()->json([
+                'message' => 'Please wait before requesting a new code.',
+            ], 429); // 429 Too Many Requests
+        }
 
         $code = rand(100000, 999999);
 
@@ -25,7 +33,7 @@ EmailController extends Controller
             ['email' => $request->email],
             [
                 'code' => $code,
-                'expires_at' => Carbon::now()->addMinutes(10),
+                'expires_at' => Carbon::now()->addMinutes(5),
             ]
         );
 
@@ -40,7 +48,7 @@ EmailController extends Controller
     {
         $request->validate([
             'email' => 'required|email',
-            'code' => 'required|string',
+            'code' => 'required|string|digits:6',
         ]);
 
         $verification = EmailVerification::where('email', $request->email)
@@ -55,7 +63,5 @@ EmailController extends Controller
 
         // حذف الكود من جدول التحقق
         $verification->delete();
-       $verification->is_verified = true;
-        $verification->save();
         return response()->json(['message' => 'Email verified successfully.']);}
 }

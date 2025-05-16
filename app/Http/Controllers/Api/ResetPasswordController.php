@@ -3,31 +3,44 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ResetCodePassword;
 use App\Models\User;
 use Illuminate\Http\Request;
-use App\Models\ResetCodePassword;
+use Illuminate\Support\Facades\Hash;
+
 class ResetPasswordController extends Controller
 {
     public function __invoke(Request $request)
     {
         $request->validate([
-            'code' => 'required|string|exists:reset_code_passwords',
-            'password' => 'required|string|min:6|confirmed',
+            'email' => 'required|email|exists:users,email',
+            'code' => 'required|string|digits:6',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
-        $passwordReset = ResetCodePassword::firstWhere('code', $request->code);
+        // العثور على السجل الذي يطابق البريد والرمز ولم ينتهِ صلاحيته
+        $passwordReset = ResetCodePassword::where('email', $request->email)
+            ->where('code', $request->code)
+            ->where('expires_at', '>', now())
+            ->first();
 
-        if ($passwordReset->created_at < now()->subHour()) {
-            $passwordReset->delete();
-            return response(['message' => trans('passwords.code_is_expire')], 422);
+        if (!$passwordReset) {
+            return response()->json([
+                'message' => 'Invalid or expired code.'
+            ], 422);
         }
 
-        $user = User::firstWhere('email', $passwordReset->email);
-        $user->update(['password' => bcrypt($request->password)]);
+        // تحديث كلمة المرور
+        $user = User::where('email', $request->email)->first();
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
 
+        // حذف الكود بعد الاستخدام
         $passwordReset->delete();
 
-        return response(['message' => 'password has been successfully reset'], 200);
+        return response()->json([
+            'message' => 'Password has been successfully reset.'
+        ], 200);
     }
-
 }

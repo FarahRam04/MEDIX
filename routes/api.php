@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\CodeCheckController;
+use App\Http\Controllers\Api\ForgotPasswordController;
+use App\Http\Controllers\Api\ResetPasswordController;
 use App\Http\Controllers\Dashboard\AdminAndEmployeeAuth;
 use App\Http\Controllers\User\UserControllerAuth;
 use App\Http\Controllers\WhatsAppController;
@@ -63,3 +66,6 @@ Route::get('/reception-area', function () {
 Route::get('/send-whatsapp',[WhatsAppController::class,'sendTestMessage']);
 Route::post('/send-email', [EmailController::class, 'sendCode']);
 Route::post('/verify-email', [EmailController::class, 'verifyCode']);
+Route::post('password/email', ForgotPasswordController::class);
+Route::post('password/code/check', CodeCheckController::class);
+Route::post('password/reset', ResetPasswordController::class);

@@ -4,7 +4,7 @@
     <title>Admin Login</title>
 </head>
 <body>
-<h2>Admin Login</h2>
+<h2>Admin Login</h2>g
 
 <form method="POST" action="/admin/login">
     @csrf

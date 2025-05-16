@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('email')->unique();
             $table->string('code');
-            $table->boolean('is_verified')->default(false);
             $table->timestamp('expires_at');
             $table->timestamps();
         });

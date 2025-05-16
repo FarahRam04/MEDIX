@@ -11,21 +11,26 @@ class CodeCheckController extends Controller
     public function __invoke(Request $request)
     {
         $request->validate([
-            'code' => 'required|string|exists:reset_code_passwords',
+            'code' => 'required|string|digits:6|exists:reset_code_passwords',
+            'email' => 'required|email|exists:users'
         ]);
 
-        $passwordReset = ResetCodePassword::firstWhere('code', $request->code);
+        // البحث عن سجل يطابق البريد والرمز
+        $passwordReset = ResetCodePassword::where('email', $request->email)
+            ->where('code', $request->code)
+            ->where('expires_at', '>', now())
+            ->first();
 
-        // التحقق من انتهاء الصلاحية
-        if ($passwordReset->created_at < now()->subHour()) {
-            $passwordReset->delete();
-            return response(['message' => trans('passwords.code_is_expire')], 422);
+        // التحقق من وجود السجل
+        if (!$passwordReset) {
+            return response()->json([
+                'message' => 'Invalid or expired code.'
+            ], 422);
         }
 
-        return response([
+        // الكود صالح
+        return response()->json([
             'code' => $passwordReset->code,
-            'message' => trans('passwords.code_is_valid')
+            'message' => 'passwords.code_is_valid'
         ], 200);
-    }
-
-}
+    }}
