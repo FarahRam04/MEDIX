@@ -4,12 +4,13 @@ use App\Http\Controllers\Api\CodeCheckController;
 use App\Http\Controllers\Api\ForgotPasswordController;
 use App\Http\Controllers\Api\ResetPasswordController;
 use App\Http\Controllers\Dashboard\AdminAndEmployeeAuth;
-use App\Http\Controllers\Dashboard\EmployeeController;
+use App\Http\Controllers\Dashboard\DepartmentController;
 use App\Http\Controllers\Dashboard\DoctorController;
+use App\Http\Controllers\Dashboard\EmployeeController;
+use App\Http\Controllers\EmailController;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\User\UserControllerAuth;
 use App\Http\Controllers\WhatsAppController;
-use App\Http\Controllers\EmailController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,9 @@ Route::middleware(['auth:sanctum','is_admin'])->group(function () {
     Route::post('/add_employee',[EmployeeController::class, 'store']);//add employee
     Route::get('/users',[UserController::class, 'index']);//get all users
     Route::get('/doctors',[DoctorController::class, 'index']);//get all doctors with all relationships
+    Route::get('/departments',[DepartmentController::class, 'index']);//get all departments
+    Route::post('/departments/create',[DepartmentController::class, 'store']);//add a department
+    Route::delete('/departments/{id}',[DepartmentController::class, 'destroy']);//delete a department
 });
 
 //routs only for employees

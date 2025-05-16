@@ -67,7 +67,7 @@ class DoctorController extends Controller
 
         $doctor->save();
 
-        return response()->json(['message' => 'Profile updated successfully.', 'doctor' => $doctor]);
+        return response()->json(['message' => 'Profile updated successfully.', 'doctor' => $doctor->load('department','employee')], 200);
 
     }
 
