@@ -4,6 +4,9 @@ use App\Http\Controllers\Api\CodeCheckController;
 use App\Http\Controllers\Api\ForgotPasswordController;
 use App\Http\Controllers\Api\ResetPasswordController;
 use App\Http\Controllers\Dashboard\AdminAndEmployeeAuth;
+use App\Http\Controllers\Dashboard\EmployeeController;
+use App\Http\Controllers\Dashboard\DoctorController;
+use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\User\UserControllerAuth;
 use App\Http\Controllers\WhatsAppController;
 use App\Http\Controllers\EmailController;
@@ -18,19 +21,19 @@ Route::get('/user', function (Request $request) {
 ///User Auth
 Route::post('/user_register',[UserControllerAuth::class,'register']);
 Route::post('/user_login',[UserControllerAuth::class,'login']);
-Route::post('/user_logout',[UserControllerAuth::class,'logout'])->middleware('auth:sanctum');
-
+Route::middleware(['auth:sanctum','is_user'])->group(function () {
+    Route::post('/user_logout',[UserControllerAuth::class,'logout']);
+    Route::post('/upload_image',[UserControllerAuth::class,'uploadImage']);
+});
 //Admin ,doctor and receptionist login
 
 Route::post('/login', [AdminAndEmployeeAuth::class, 'login']);//you can hide anything in Employee or Admin Model
 
 //routs only for admins
 Route::middleware(['auth:sanctum','is_admin'])->group(function () {
-    Route::get('/admin-only', function () {
-        return response()->json(['message' => 'Welcome Admin']);
-    });
-    Route::post('/add_employee',[AdminAndEmployeeAuth::class, 'addEmployee']);
-    Route::get('/users',[UserControllerAuth::class, 'index']);//get all users
+    Route::post('/add_employee',[EmployeeController::class, 'store']);//add employee
+    Route::get('/users',[UserController::class, 'index']);//get all users
+    Route::get('/doctors',[DoctorController::class, 'index']);//get all doctors with all relationships
 });
 
 //routs only for employees
@@ -38,6 +41,12 @@ Route::middleware(['auth:sanctum','is_employee'])->group(function () {
     Route::get('/employee-only', function () {
         return response()->json(['message' => 'Welcome Employee']);
     });
+});
+
+//routes only for doctors
+
+Route::middleware(['auth:sanctum','is_doctor'])->group(function () {
+    Route::post('/update_profile',[DoctorController::class, 'update']);
 });
 
 //WhatsApp
@@ -62,8 +71,7 @@ Route::get('/reception-area', function () {
 
 
 
-//Get Departments
-Route::get('/send-whatsapp',[WhatsAppController::class,'sendTestMessage']);
+//Route::get('/send-whatsapp',[WhatsAppController::class,'sendTestMessage']);
 Route::post('/send-email', [EmailController::class, 'sendCode']);
 Route::post('/verify-email', [EmailController::class, 'verifyCode']);
 Route::post('password/email', ForgotPasswordController::class);

@@ -15,6 +15,9 @@ class DepartmentsSeeder extends Seeder
     {
         DB::table('departments')->insert([
             [
+                'name'=>'General'
+            ],
+            [
                 'name'=>'Cardiology'
             ],
             [
@@ -22,7 +25,8 @@ class DepartmentsSeeder extends Seeder
             ],
             [
                 'name'=>'Gastroenterology'
-            ]
+            ],
+
         ]);
     }
 }

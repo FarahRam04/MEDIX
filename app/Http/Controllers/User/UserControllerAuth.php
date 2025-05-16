@@ -17,7 +17,11 @@ class UserControllerAuth extends Controller
         $validated = $request->validated();
         $validated['password'] = Hash::make($validated['password']);
         $user = User::create($validated);
+        Auth::login($user);
+        $this->uploadImage($request);
         $token = $user->createToken('auth_token for u.' . $user->first_name)->plainTextToken;
+
+        $user->refresh();
         return response()->json([
             'message' => 'user Registered successfully',
             'User' => $user,
@@ -26,14 +30,23 @@ class UserControllerAuth extends Controller
     }
     public function uploadImage(Request $request){
         $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
+            'image' => 'image|mimes:jpeg,png,jpg,gif,svg',
         ]);
-        $imagePath = $request->file('image')->store('images', 'public');
-        $user=User::find(Auth::id());
-        $user->image=asset('storage/' . $imagePath);
-        $user->save();
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('images', 'public');
+            $user = User::find(Auth::id());
+            $user->image = asset('storage/' . $imagePath);
+            $user->save();
 
-        return response()->json(['message'=>'Image uploaded successfully','path'=>$user->image]);
+            return response()->json([
+                'message' => 'Image uploaded successfully',
+                'path' => $user->image,
+                'user_id'=>$user->id,
+                'user_name'=>$user->first_name,
+
+                ]);
+        }
+        return response()->json(['message' => 'Image not uploaded'],422);
     }
 
 
@@ -45,7 +58,7 @@ class UserControllerAuth extends Controller
             return response()->json(['message' => 'Invalid email or password'], 401);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('auth_token for U.'. $user->first_name)->plainTextToken;
 
         return response()->json([
             'message' => 'Login successfully',
@@ -57,7 +70,7 @@ class UserControllerAuth extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $request->user()->tokens()->delete();
 
         return response()->json([
             'message' => 'logout successfully',

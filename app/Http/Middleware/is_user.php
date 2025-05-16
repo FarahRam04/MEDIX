@@ -2,26 +2,26 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Employee;
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class EnsureUserIsEmployee
+class is_user
 {
     /**
      * Handle an incoming request.
      *
-     * @param Closure(Request): (Response) $next
+     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
         // تحقق إن المستخدم Authenticated
         $user = $request->user();
 
-        // هنا الشرط المهم: هل المستخدم من جدول employee؟
-        if (! $user || get_class($user) !== Employee::class) {
-            return response()->json(['message' => 'Unauthorized. Employee only.'], 403);
+        // هنا الشرط المهم: هل المستخدم من جدول users؟
+        if (! $user || get_class($user) !== User::class) {
+            return response()->json(['message' => 'Unauthorized. Users only.'], 403);
         }
 
         return $next($request);
