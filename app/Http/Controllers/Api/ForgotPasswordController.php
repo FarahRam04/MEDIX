@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin;
 use App\Models\EmailVerification;
+use App\Models\Employee;
 use App\Models\ResetCodePassword;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -16,14 +19,30 @@ class ForgotPasswordController extends Controller
     {
         $data = $request->validate([
             'email'
-            => 'required|email|exists:users',
+            => 'required|email',
         ]);
+
+        // معرفة نوع المستخدم
+        $type = null;
+
+        if (User::where('email', $request->email)->exists()) {
+            $type = 'user';
+        } elseif (Admin::where('email', $request->email)->exists()) {
+            $type = 'admin';
+        } elseif (Employee::where('email', $request->email)->exists()) {
+            $type = 'employee';
+        }
+
+        if (!$type) {
+            return response()->json(['message' => 'Email not found.'], 404);
+        }
 
         // حذف الأكواد القديمة
         ResetCodePassword::where('email', $request->email)->delete();
 
         // إنشاء كود عشوائي
-        $code = rand(100000, 999999);
+        $code = random_int(100000, 999999);
+
 
         // حفظ الكود
         ResetCodePassword::updateOrCreate(
@@ -40,7 +59,10 @@ class ForgotPasswordController extends Controller
             $message->to($request->email)
                 ->subject('Reset password');
         });
-        return response(['message' =>'check email,we send the code.'], 200);
+        return response([
+            'message' => 'Check your email, we sent the code.',
+            'type' => $type,
+        ], 200);
     }
 
 }
