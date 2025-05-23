@@ -25,7 +25,9 @@ class Employee extends Authenticatable
     {
         return $this->hasOne(Doctor::class);
     }
-
+    public function time(){
+        return $this->hasOne(Time::class);
+    }
 
 }
 

@@ -41,7 +41,11 @@ class DepartmentController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate(['name' => 'required|string|max:255']);
+        $department=Department::findOrFail($id);
+        $department->update($request->all());
+        $department->save();
+        return response()->json(['message'=>'Department updated successfully','department'=>$department]);
     }
 
     /**
