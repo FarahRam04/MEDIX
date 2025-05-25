@@ -9,7 +9,7 @@ use App\Models\ResetCodePassword;
 use App\Models\User;
 use Illuminate\Http\Request;
 
-class CodeCheckController extends Controller
+class CodeCheckEmailController extends Controller
 {
     public function __invoke(Request $request)
     {

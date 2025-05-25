@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('phone');
             $table->string('code');
+            $table->string('type')->default('register'); // register, reset_password, etc.
+            $table->timestamp('expires_at'); // اختياري لو تحب تنتهي صلاحية الكود بعد مدة
             $table->timestamps();
         });
     }

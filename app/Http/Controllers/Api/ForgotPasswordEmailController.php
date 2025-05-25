@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\SendCodeResetPassword;
 
-class ForgotPasswordController extends Controller
+class ForgotPasswordEmailController extends Controller
 {
     public function __invoke(Request $request)
     {

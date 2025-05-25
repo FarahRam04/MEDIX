@@ -1,8 +1,11 @@
 <?php
 
-use App\Http\Controllers\Api\CodeCheckController;
-use App\Http\Controllers\Api\ForgotPasswordController;
-use App\Http\Controllers\Api\ResetPasswordController;
+use App\Http\Controllers\Api\CodeCheckEmailController;
+use App\Http\Controllers\Api\CodeCheckWhatsappController;
+use App\Http\Controllers\Api\ForgetPasswordWhatsappController;
+use App\Http\Controllers\Api\ForgotPasswordEmailController;
+use App\Http\Controllers\Api\ResetPasswordEmailController;
+use App\Http\Controllers\Api\ResetPasswordWhatsappController;
 use App\Http\Controllers\Dashboard\AdminAndEmployeeAuth;
 use App\Http\Controllers\Dashboard\DepartmentController;
 use App\Http\Controllers\Dashboard\DoctorController;
@@ -83,6 +86,13 @@ Route::get('/reception-area', function () {
 //Route::get('/send-whatsapp',[WhatsAppController::class,'sendTestMessage']);
 Route::post('/send-email', [EmailController::class, 'sendCode']);
 Route::post('/verify-email', [EmailController::class, 'verifyCode']);
-Route::post('password/email', ForgotPasswordController::class);
-Route::post('password/code/check', CodeCheckController::class);
-Route::post('password/reset', ResetPasswordController::class);
+Route::post('password/email', ForgotPasswordEmailController::class);
+Route::post('password/code/check', CodeCheckEmailController::class);
+Route::post('password/reset', ResetPasswordEmailController::class);
+Route::post('password/send/whatsapp',ForgetPasswordWhatsappController::class);
+Route::post('password/code/check/whatsapp', CodeCheckWhatsappController::class);
+Route::post('password/reset/whatsapp', ResetPasswordWhatsappController::class);
+
+
+
+
