@@ -87,8 +87,8 @@ Route::get('/reception-area', function () {
 Route::post('/send-email', [EmailController::class, 'sendCode']);
 Route::post('/verify-email', [EmailController::class, 'verifyCode']);
 Route::post('password/email', ForgotPasswordEmailController::class);
-Route::post('password/code/check', CodeCheckEmailController::class);
-Route::post('password/reset', ResetPasswordEmailController::class);
+Route::post('password/code/check/email', CodeCheckEmailController::class);
+Route::post('password/reset/email', ResetPasswordEmailController::class);
 Route::post('password/send/whatsapp',ForgetPasswordWhatsappController::class);
 Route::post('password/code/check/whatsapp', CodeCheckWhatsappController::class);
 Route::post('password/reset/whatsapp', ResetPasswordWhatsappController::class);
