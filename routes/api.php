@@ -33,7 +33,10 @@ Route::post('/login', [AdminAndEmployeeAuth::class, 'login']);//you can hide any
 
 //routs only for admins
 Route::middleware(['auth:sanctum','is_admin'])->group(function () {
+    Route::get('/employees',[EmployeeController::class, 'index']);
     Route::post('/add_employee',[EmployeeController::class, 'store']);//add employee
+    Route::delete('/employees/{id}',[EmployeeController::class, 'destroy']);
+
     Route::get('/users',[UserController::class, 'index']);//get all users
     Route::get('/doctors',[DoctorController::class, 'index']);//get all doctors with all relationships
 
@@ -41,8 +44,12 @@ Route::middleware(['auth:sanctum','is_admin'])->group(function () {
     Route::post('/departments/create',[DepartmentController::class, 'store']);//add a department
     Route::put('/departments/{id}',[DepartmentController::class, 'update']);
     Route::delete('/departments/{id}',[DepartmentController::class, 'destroy']);//delete a department
-    Route::post('/working_details',[TimeController::class, 'store']);
+
     Route::get('/working_details',[TimeController::class, 'index']);
+    Route::post('/working_details',[TimeController::class, 'store']);
+    Route::put('/working_details/{id}',[TimeController::class, 'update']);
+    Route::delete('/working_details/{id}',[TimeController::class, 'destroy']);
+
 });
 
 //routs only for employees

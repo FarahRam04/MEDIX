@@ -14,8 +14,8 @@ class TimeResource extends JsonResource
             'first_name' => $this->employee->first_name,
             'last_name' => $this->employee->last_name,
             'days' => $this->days->pluck('day_name'),
-            'start_time' => Carbon::createFromFormat('H:i:s', $this->start_time)->format('H:i A'),
-            'end_time' => Carbon::createFromFormat('H:i:s', $this->end_time)->format('H:i A'),
+            'start_time' => Carbon::createFromFormat('H:i:s', $this->start_time)->format('g:i A'),
+            'end_time' => Carbon::createFromFormat('H:i:s', $this->end_time)->format('g:i A'),
         ];
     }
 }

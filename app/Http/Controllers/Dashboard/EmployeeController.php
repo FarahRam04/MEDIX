@@ -14,7 +14,7 @@ class EmployeeController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json(Employee::all());
     }
 
     /**
@@ -59,7 +59,19 @@ class EmployeeController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $employee = Employee::findOrFail($id);
+
+        // الحصول على وقت العمل المرتبط
+        $time = $employee->time;
+
+        if ($time) {
+            $time->days()->detach(); // فك الربط مع الأيام
+            $time->delete();         // حذف وقت العمل
+        }
+
+        $employee->delete(); // حذف الموظف
+
+        return response()->json(['message' => 'Employee and related time deleted successfully.']);
     }
 
 

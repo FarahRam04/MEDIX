@@ -14,13 +14,13 @@ class DaySeeder extends Seeder
     public function run(): void
     {
         $days = [
-            'Sunday',
-            'Monday',
-            'Tuesday',
-            'Wednesday',
-            'Thursday',
-            'Friday',
-            'Saturday',
+            'sunday',
+            'monday',
+            'tuesday',
+            'wednesday',
+            'thursday',
+            'friday',
+            'saturday',
         ];
 
         foreach ($days as $day) {
