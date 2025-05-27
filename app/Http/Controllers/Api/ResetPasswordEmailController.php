@@ -10,7 +10,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
-class ResetPasswordController extends Controller
+class ResetPasswordEmailController extends Controller
 {
     public function __invoke(Request $request)
     {
