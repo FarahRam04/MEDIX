@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateWorkingDetailsRequest;
 use App\Http\Requests\WorkingDetailsRequest;
 use App\Http\Resources\TimeResource;
 use App\Models\Day;
@@ -30,96 +31,22 @@ class TimeController extends Controller
     {
         $validated = $request->validated();
 
-        $start = Carbon::createFromFormat('g:i A', $validated['start_time'])->format('H:i:s');
-        $end = Carbon::createFromFormat('g:i A', $validated['end_time'])->format('H:i:s');
+        $result = $this->validateShiftAndConflict($validated);
 
-        // الشيفتات المسموحة فقط
-        $allowedShifts = [
-            ['start' => '09:00:00', 'end' => '13:00:00'],
-            ['start' => '14:00:00', 'end' => '18:00:00'],
-        ];
-
-        $isValidShift = collect($allowedShifts)->contains(function ($shift) use ($start, $end) {
-            return $start === $shift['start'] && $end === $shift['end'];
-        });
-
-        if (!$isValidShift) {
-            return response()->json(['error' => 'Only two shifts allowed: 9-13 or 14-18'], 422);
+        if (isset($result['error'])) {
+            return response()->json(['error' => $result['error']], 422);
         }
 
-        // جلب الموظف والتحقق من نوعه
-        $employee = Employee::findOrFail($validated['employee_id']);
-
-        $dayIds = Day::whereIn('day_name', array_map('strtolower', $validated['days']))->pluck('id');
-
-        if ($dayIds->isEmpty()) {
-            return response()->json(['error' => 'No valid days found'], 422);
-        }
-
-        foreach ($dayIds as $dayId) {
-            $conflictingQuery = Time::whereHas('days', fn($q) => $q->where('day_id', $dayId))
-                ->where(function ($q) use ($start, $end) {
-                    $q->where(function ($q) use ($start, $end) {
-                        $q->where('start_time', '<', $end)
-                            ->where('end_time', '>', $start);
-                    });
-                });
-
-            if ($employee->role === 'doctor') {
-                $conflictingQuery->whereHas('employee.doctor', function ($q) use ($employee) {
-                    $q->where('department_id', $employee->doctor->department_id);
-                });
-
-            } else {
-                $conflictingQuery->whereHas('employee', function ($q) {
-                    $q->where('role', 'receptionist');
-                });
-            }
-
-            if ($conflictingQuery->exists()) {
-                return response()->json(['error' => 'Schedule conflict for this day and shift'], 422);
-            }
-        }
-
-        // إنشاء وقت جديد
         $time = Time::create([
             'employee_id' => $validated['employee_id'],
-            'start_time' => $start,
-            'end_time' => $end,
+            'start_time' => $result['start'],
+            'end_time' => $result['end'],
         ]);
 
-        $time->days()->attach($dayIds);
+        $time->days()->attach($result['dayIds']);
 
         return new TimeResource($time->load('employee', 'days'));
     }
-//    public function store(WorkingDetailsRequest $request)
-//    {
-//        $validated = $request->validated();
-//
-//        // تحويل الوقت إلى 24 ساعة للتخزين
-//        $start = Carbon::createFromFormat('g:i A', $validated['start_time'])->format('H:i:s');
-//        $end = Carbon::createFromFormat('g:i A', $validated['end_time'])->format('H:i:s');
-//
-//        // جلب IDs الأيام بناءً على الأسماء (lowercase)
-//        $dayIds = Day::whereIn('day_name', array_map('strtolower', $validated['days']))->pluck('id');
-//
-//        if ($dayIds->isEmpty()) {
-//            return response()->json(['error' => 'No valid days found'], 422);
-//        }
-//
-//        // إنشاء سجل الوقت
-//        $time = Time::create([
-//            'employee_id' => $validated['employee_id'],
-//            'start_time' => $start,
-//            'end_time' => $end,
-//        ]);
-//
-//        // ربط الأيام
-//        $time->days()->attach($dayIds);
-//
-//        // إعادة الريسبونس باستخدام الـ Resource
-//        return new TimeResource($time->load('employee', 'days'));
-//    }
 
     /**
      * Display the specified resource.
@@ -132,44 +59,26 @@ class TimeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
 
-        // تعديل: حوّلي أسماء الأيام لحروف صغيرة أولاً
-        if ($request->has('days')) {
-            $request->merge([
-                'days' => array_map('strtolower', $request->input('days'))
-            ]);
+    public function update(UpdateWorkingDetailsRequest $request, Time $time)
+    {
+        $validated = $request->validated();
+
+        $result = $this->validateShiftAndConflict($validated, $time->id, $time->employee,$time);
+
+        if (isset($result['error'])) {
+            return response()->json(['error' => $result['error']], 422);
         }
 
-        $validated = $request->validate([
-            'start_time' => ['required', 'date_format:g:i A'],
-            'end_time' => ['required', 'date_format:g:i A'],
-            'days' => ['required', 'array'],
-            'days.*' => ['string', Rule::in(['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'])],
-        ]);
-
-        $time = Time::findOrFail($id);
-
-        // تحويل الوقت إلى صيغة 24 ساعة (لحفظه في قاعدة البيانات بشكل صحيح)
-        $start = date("H:i:s", strtotime($validated['start_time']));
-        $end = date("H:i:s", strtotime($validated['end_time']));
-
         $time->update([
-            'start_time' => $start,
-            'end_time' => $end,
+            'start_time' => $result['start'],
+            'end_time' => $result['end'],
         ]);
 
-        // الحصول على IDs الأيام من جدول Day
-        $dayIds = Day::whereIn('day_name', array_map('strtolower', $validated['days']))->pluck('id');
+        $time->days()->sync($result['dayIds']);
 
-        // مزامنة الأيام
-        $time->days()->sync($dayIds);
-
-        // رجع النتيجة باستخدام Resource
         return new TimeResource($time->load('employee', 'days'));
     }
-
     /**
      * Remove the specified resource from storage.
      */
@@ -184,5 +93,80 @@ class TimeController extends Controller
         return response()->json(['message' => 'Time deleted successfully.']);
     }
 
+    protected function validateShiftAndConflict(
+        array $validated,
+        ?int $excludeTimeId = null,
+        ?Employee $employee = null,
+        ?Time $time = null
+    ) {
+        // 1. تحديد وقت البداية والنهاية
+        $start = isset($validated['start_time'])
+            ? Carbon::createFromFormat('g:i A', $validated['start_time'])->format('H:i:s')
+            : ($time ? $time->start_time : null);
+
+        $end = isset($validated['end_time'])
+            ? Carbon::createFromFormat('g:i A', $validated['end_time'])->format('H:i:s')
+            : ($time ? $time->end_time : null);
+
+        if (!$start || !$end) {
+            return ['error' => 'Start and end time must be provided.'];
+        }
+
+        // 2. التحقق من الشيفت
+        $allowedShifts = [
+            ['start' => '09:00:00', 'end' => '13:00:00'],
+            ['start' => '14:00:00', 'end' => '18:00:00'],
+        ];
+
+        $isValidShift = collect($allowedShifts)->contains(fn($shift) => $start === $shift['start'] && $end === $shift['end']);
+
+        if (!$isValidShift) {
+            return ['error' => 'Only two shifts allowed: 9-13 or 14-18'];
+        }
+
+        // 3. جلب الموظف
+        if (!$employee && isset($validated['employee_id'])) {
+            $employee = Employee::findOrFail($validated['employee_id']);
+        } elseif (!$employee) {
+            return ['error' => 'Employee not found.'];
+        }
+
+        // 4. تحديد الأيام
+        $dayIds = isset($validated['days'])
+            ? Day::whereIn('day_name', array_map('strtolower', $validated['days']))->pluck('id')
+            : ($time ? $time->days->pluck('id') : collect());
+
+        if ($dayIds->isEmpty()) {
+            return ['error' => 'No valid days found'];
+        }
+
+        // 5. البحث عن تعارض
+        foreach ($dayIds as $dayId) {
+            $conflictingQuery = Time::whereHas('days', fn($q) => $q->where('day_id', $dayId))
+                ->where('start_time', $start)
+                ->where('end_time', $end);
+
+            if ($excludeTimeId) {
+                $conflictingQuery->where('id', '!=', $excludeTimeId);
+            }
+
+            if ($employee->role === 'doctor') {
+                $conflictingQuery->whereHas('employee.doctor', fn($q) => $q->where('department_id', $employee->doctor->department_id));
+            } else {
+                $conflictingQuery->whereHas('employee', fn($q) => $q->where('role', 'receptionist'));
+            }
+
+            if ($conflictingQuery->exists()) {
+                return ['error' => 'Schedule conflict for this day or shift'];
+            }
+        }
+
+        return [
+            'start' => $start,
+            'end' => $end,
+            'employee' => $employee,
+            'dayIds' => $dayIds,
+        ];
+    }
 
 }

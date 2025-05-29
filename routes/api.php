@@ -50,7 +50,7 @@ Route::middleware(['auth:sanctum','is_admin'])->group(function () {
 
     Route::get('/working_details',[TimeController::class, 'index']);
     Route::post('/working_details',[TimeController::class, 'store']);
-    Route::put('/working_details/{id}',[TimeController::class, 'update']);
+    Route::put('/working_details/{time}',[TimeController::class, 'update']);
     Route::delete('/working_details/{id}',[TimeController::class, 'destroy']);
 
 });
