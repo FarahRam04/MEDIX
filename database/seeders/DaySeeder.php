@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -23,8 +22,9 @@ class DaySeeder extends Seeder
             'saturday',
         ];
 
-        foreach ($days as $day) {
+        foreach ($days as $index => $day) {
             DB::table('days')->insert([
+                'id' => $index, // ← نحدد id يدويًا: 0 للأحد، 1 للاثنين...
                 'day_name' => $day,
                 'created_at' => now(),
                 'updated_at' => now(),

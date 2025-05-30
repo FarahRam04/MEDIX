@@ -45,4 +45,8 @@ class User extends Authenticatable
     public function doctors(){
         return $this->belongsToMany(Doctor::class);
     }
+
+    public function patient(){
+        return $this->hasOne(Patient::class);
+    }
 }

@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateWorkingDetailsRequest;
 use App\Http\Requests\WorkingDetailsRequest;
 use App\Http\Resources\TimeResource;
+use App\Models\AvailableSlot;
 use App\Models\Day;
+use App\Models\Doctor;
 use App\Models\Employee;
 use App\Models\Time;
 use Carbon\Carbon;
@@ -45,6 +47,17 @@ class TimeController extends Controller
 
         $time->days()->attach($result['dayIds']);
 
+        // جلب كل الـ available_slots ضمن وقت الدوام
+        $matchingSlots = AvailableSlot::where('start_time', '>=', $result['start'])
+            ->where('start_time', '<', $result['end']) // لأن end هو نهاية الشفت
+            ->pluck('id')
+            ->toArray();
+        // ربط الدكتور بالـ slots المناسبة عبر جدول Pivot (doctor_slot أو employee_slot)
+        $doctor = Doctor::where('employee_id', $validated['employee_id'])->first();
+
+        if ($doctor) {
+            $doctor->availableSlots()->sync($matchingSlots);
+        }
         return new TimeResource($time->load('employee', 'days'));
     }
 

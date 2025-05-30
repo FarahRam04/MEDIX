@@ -12,6 +12,7 @@ use App\Http\Controllers\Dashboard\DoctorController;
 use App\Http\Controllers\Dashboard\EmployeeController;
 use App\Http\Controllers\Dashboard\TimeController;
 use App\Http\Controllers\EmailController;
+use App\Http\Controllers\User\PatientController;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\User\UserControllerAuth;
 use App\Http\Controllers\WhatsAppController;
@@ -22,13 +23,19 @@ use Illuminate\Support\Facades\Route;
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
-
+//rotes without middleware
 ///User Auth
 Route::post('/user_register',[UserControllerAuth::class,'register']);
 Route::post('/user_login',[UserControllerAuth::class,'login']);
+
+Route::get('/departments',[DepartmentController::class, 'index']);//get all departments
+
+//routes only for users
 Route::middleware(['auth:sanctum','is_user'])->group(function () {
     Route::post('/user_logout',[UserControllerAuth::class,'logout']);
     Route::post('/upload_image',[UserControllerAuth::class,'uploadImage']);
+    Route::post('/patients',[PatientController::class, 'store']);//add a patient and Book an appointment
+    Route::get('/doctors/{id}/schedule',[PatientController::class, 'getDoctorSchedule']);
 });
 //Admin ,doctor and receptionist login
 
@@ -43,7 +50,7 @@ Route::middleware(['auth:sanctum','is_admin'])->group(function () {
     Route::get('/users',[UserController::class, 'index']);//get all users
     Route::get('/doctors',[DoctorController::class, 'index']);//get all doctors with all relationships
 
-    Route::get('/departments',[DepartmentController::class, 'index']);//get all departments
+    Route::get('/departments/doctors',[DepartmentController::class, 'indexWithDoctors']);//get all departments with doctors
     Route::post('/departments/create',[DepartmentController::class, 'store']);//add a department
     Route::put('/departments/{id}',[DepartmentController::class, 'update']);
     Route::delete('/departments/{id}',[DepartmentController::class, 'destroy']);//delete a department
@@ -66,6 +73,7 @@ Route::middleware(['auth:sanctum','is_employee'])->group(function () {
 
 Route::middleware(['auth:sanctum','is_doctor'])->group(function () {
     Route::post('/update_profile',[DoctorController::class, 'update']);
+
 });
 
 //WhatsApp
