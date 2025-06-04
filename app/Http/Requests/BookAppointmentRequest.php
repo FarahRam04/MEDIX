@@ -22,15 +22,12 @@ class   BookAppointmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'required|exists:users,id',
-            'slot_id' => 'required|exists:available_slots,id',
-            'type' => 'required|in:check_up,follow_up',
-            'specialization' => 'required|string',
-            'status' => 'required|in:pending,completed',
-            'check_up_price' => 'required|numeric',
-            'lab_tests' => 'sometimes|boolean',
-            'total_price' => 'required|numeric',
-            'payment_status' => 'required|boolean',
+            'department_id'    => 'required|exists:departments,id',
+            'doctor_id'       => 'required|exists:employees,id',
+            'type'            => 'required|in:check_up,follow_up',
+            'date'            => 'required|date|after_or_equal:today',
+            'slot_id'         => 'required|exists:available_slots,id',
+            'with_medical_report'=>'boolean',
         ];
     }
 }

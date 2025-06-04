@@ -22,4 +22,9 @@ class Appointment extends Model
     {
         return $this->hasMany(AvailableSlot::class);
     }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
 }

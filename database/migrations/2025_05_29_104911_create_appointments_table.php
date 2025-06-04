@@ -16,6 +16,7 @@ return new class extends Migration
 
             $table->foreignId('doctor_id')->constrained('doctors')->onDelete('cascade');
             $table->foreignId('patient_id')->constrained('patients')->onDelete('cascade');
+            $table->foreignId('department_id')->constrained('departments')->onDelete('cascade');
 
             $table->date('date'); // تاريخ الحجز
             $table->foreignId('slot_id')->constrained('available_slots')->onDelete('cascade'); // وقت الحجز الثابت
@@ -24,10 +25,12 @@ return new class extends Migration
             $table->string('specialization');
             $table->enum('status', ['pending', 'completed'])->default('pending');
 
-            $table->unsignedBigInteger('check_up_price');
+            $table->unsignedBigInteger('check_up_price')->default(50000);
             $table->boolean('lab_tests')->default(false);
-            $table->unsignedBigInteger('total_price');
+            $table->unsignedBigInteger('total_price')->nullable();
             $table->boolean('payment_status')->default(false);
+
+            $table->boolean('with_medical_report')->default(false);
 
             $table->timestamps();
         });

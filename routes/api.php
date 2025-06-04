@@ -40,7 +40,6 @@ Route::middleware(['auth:sanctum','is_user'])->group(function () {
     Route::post('/user_logout',[UserControllerAuth::class,'logout']);
     Route::post('/upload_image',[UserControllerAuth::class,'uploadImage']);
     Route::post('/patients',[PatientController::class, 'store']);//add a patient and Book an appointment
-    Route::get('/doctors/{id}/schedule',[PatientController::class, 'getDoctorSchedule']);////////////////////////////////////
 });
 //Admin ,doctor and receptionist login
 

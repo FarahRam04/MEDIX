@@ -17,7 +17,7 @@ class BookingPage extends Controller
     public function getNextFiveDays()
     {
         $days = [];
-        $today = Carbon::today();
+        $today = Carbon::now('Asia/Damascus')->startOfDay();
 
         for ($i = 0; $i < 5; $i++) {
             $days[] = [
@@ -126,11 +126,19 @@ class BookingPage extends Controller
             ->whereIn('id', $slotRange)
             ->orderBy('id')
             ->get()
-            ->map(function ($slot) use ($doctorSlots) {
+            ->map(function ($slot) use ($doctorSlots, $doctor, $date) {
+                $isDoctorAvailable = in_array($slot->id, $doctorSlots);
+
+                $isAlreadyBooked = DB::table('appointments')
+                    ->where('doctor_id', $doctor->doctor_id)
+                    ->where('slot_id', $slot->id)
+                    ->where('date', $date->toDateString())
+                    ->exists();
+
                 return [
                     'id' => $slot->id,
                     'time' => $slot->start_time,
-                    'isAvailable' => in_array($slot->id, $doctorSlots),
+                    'isAvailable' => $isDoctorAvailable && !$isAlreadyBooked,
                 ];
             });
 

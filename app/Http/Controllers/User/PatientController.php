@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\BookAppointmentRequest;
 use App\Models\Appointment;
 use App\Models\AvailableSlot;
+use App\Models\Doctor;
 use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -29,17 +30,27 @@ class PatientController extends Controller
     public function store(BookAppointmentRequest $request)
     {
         DB::transaction(function () use ($request) {
-            // 1. تحديث المستخدم
-            $user = User::findOrFail($request->user_id);
+            // 1. جلب المستخدم من التوكن وتحديث حالته كمريض
+            $user = auth()->user();
             $user->is_patient = true;
             $user->save();
 
             // 2. إنشاء مريض إذا لم يكن موجود
             $patient = Patient::firstOrCreate([
-                'user_id' => $request->user_id
+                'user_id' => $user->id
             ]);
 
-            // 3. التحقق من العلاقة بين الدكتور والـ slot
+            // 3. جلب الدكتور والتخصص
+            $doctor = Doctor::findOrFail($request->doctor_id);
+            if ($doctor->department_id !== (int) $request->department_id) {
+                throw ValidationException::withMessages([
+                    'department_id' => 'this doctor does not work in that department',
+                ]);
+            }
+            $department_id = $doctor->department_id;
+            $specialization = $doctor->department->name;
+
+            // 4. التأكد أن الـ slot فعلاً مربوط بهذا الدكتور
             $exists = DB::table('available_slot_doctor')
                 ->where('available_slot_id', $request->slot_id)
                 ->where('doctor_id', $request->doctor_id)
@@ -47,11 +58,11 @@ class PatientController extends Controller
 
             if (!$exists) {
                 throw ValidationException::withMessages([
-                    'slot_id' => 'هذا الموعد لا يتبع الدكتور المحدد.',
+                    'slot_id' => 'this time does not belong to this doctor',
                 ]);
             }
 
-            // 4. التأكد أن الموعد غير محجوز مسبقًا لهذا الدكتور
+            // 5. التأكد من أن الموعد غير محجوز مسبقًا لهذا الدكتور في نفس التاريخ والوقت
             $alreadyBooked = Appointment::where('doctor_id', $request->doctor_id)
                 ->where('slot_id', $request->slot_id)
                 ->where('date', $request->date)
@@ -59,11 +70,11 @@ class PatientController extends Controller
 
             if ($alreadyBooked) {
                 throw ValidationException::withMessages([
-                    'slot_id' => 'هذا الموعد محجوز مسبقًا لهذا الدكتور في هذا التاريخ.',
+                    'slot_id' => 'this time slot is already booked fro this doctor',
                 ]);
             }
 
-            // 5. التأكد أن المريض لا يملك موعدًا آخر بنفس التاريخ والـ slot
+            // 6. التأكد أن المريض لا يملك موعدًا آخر في نفس التاريخ والوقت
             $patientConflict = Appointment::where('patient_id', $patient->id)
                 ->where('slot_id', $request->slot_id)
                 ->where('date', $request->date)
@@ -71,48 +82,43 @@ class PatientController extends Controller
 
             if ($patientConflict) {
                 throw ValidationException::withMessages([
-                    'slot_id' => 'لديك موعد آخر في نفس الوقت.',
+                    'slot_id' => ' Book denied: you already have another appointment at this time.',
                 ]);
             }
 
-            //this situation won`t be done. because in the application the doctor will appear only in his working days
-            // ✅ 6. التأكد من أن اليوم الموافق للتاريخ موجود ضمن أيام دوام الدكتور
-            $dayOfWeek = Carbon::parse($request->date)->dayOfWeek; // 0=sun ... 6=sat
+            // 7. التأكد من أن الدكتور يعمل في هذا اليوم
+            $dayOfWeek = Carbon::parse($request->date)->dayOfWeek; // 0 = الأحد ... 6 = السبت
 
             $doctorWorksThatDay = DB::table('times')
                 ->join('day_time', 'times.id', '=', 'day_time.time_id')
-                ->where('times.employee_id', $request->doctor_id)
+                ->where('times.employee_id', $request->doctor_id) // إذا كان جدول الدوام يستخدم doctor_id غيّر هذا السطر
                 ->where('day_time.day_id', $dayOfWeek)
                 ->exists();
 
             if (!$doctorWorksThatDay) {
                 throw ValidationException::withMessages([
-                    'date' => 'الدكتور لا يعمل في هذا اليوم.',
+                    'date' => 'The doctor does not work in this day',
                 ]);
             }
 
-            // 7. قفل السجل لضمان الحجز
+            // 8. قفل الـ slot للحجز الآمن
             $slot = AvailableSlot::lockForUpdate()->findOrFail($request->slot_id);
 
-            // 8. إنشاء الموعد
-            Appointment::create([
-                'patient_id' => $patient->id,
-                'doctor_id' => $request->doctor_id,
-                'slot_id' => $slot->id,
-                'date' => $request->date,
-                'type' => $request->type,
-                'specialization' => $request->specialization,
-                'status' => $request->status ?? 'pending',
-                'check_up_price' => $request->check_up_price,
-                'lab_tests' => $request->lab_tests ?? false,
-                'total_price' => $request->total_price,
-                'payment_status' => $request->payment_status,
+            // 9. إنشاء الموعد
+            $appointment = Appointment::create([
+                'doctor_id'           => $request->doctor_id,
+                'patient_id'          => $patient->id,
+                'department_id'       => $department_id,
+                'date'                => $request->date,
+                'slot_id'             => $request->slot_id,
+                'type'                => $request->type,
+                'with_medical_report' => $request->with_medical_report ?? false,
+                'specialization'     =>$specialization
             ]);
         });
 
-        return response()->json(['message' => 'تم حجز الموعد بنجاح.']);
+        return response()->json(['message' => 'Appointment booked successfully']);
     }
-
 
 
     public function getDoctorSchedule($doctorId)
