@@ -13,10 +13,6 @@ class DepartmentController extends Controller
      */
     public function index()
     {
-        return response()->json(Department::all());
-    }
-    public function indexWithDoctors()
-    {
         return response()->json(Department::with('doctors')->get());
     }
 

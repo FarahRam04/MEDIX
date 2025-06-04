@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ForgetPasswordWhatsappController;
 use App\Http\Controllers\Api\ForgotPasswordEmailController;
 use App\Http\Controllers\Api\ResetPasswordEmailController;
 use App\Http\Controllers\Api\ResetPasswordWhatsappController;
+use App\Http\Controllers\BookingPage;
 use App\Http\Controllers\Dashboard\AdminAndEmployeeAuth;
 use App\Http\Controllers\Dashboard\DepartmentController;
 use App\Http\Controllers\Dashboard\DoctorController;
@@ -28,14 +29,18 @@ Route::get('/user', function (Request $request) {
 Route::post('/user_register',[UserControllerAuth::class,'register']);
 Route::post('/user_login',[UserControllerAuth::class,'login']);
 
-Route::get('/departments',[DepartmentController::class, 'index']);//get all departments
+Route::get('/departments',[BookingPage::class, 'departments']);//get all departments
+Route::get('/default_days',[BookingPage::class, 'getNextFiveDays']);//get default days
+Route::get('/default_times',[BookingPage::class, 'getSlotsByRange']);//default morning and afternoon times
+Route::get('/department/{id}',[BookingPage::class, 'getDepartmentAvailability']);
+Route::get('/availableSlotsByShift',[BookingPage::class, 'getShiftSlotsWithDoctor']);
 
 //routes only for users
 Route::middleware(['auth:sanctum','is_user'])->group(function () {
     Route::post('/user_logout',[UserControllerAuth::class,'logout']);
     Route::post('/upload_image',[UserControllerAuth::class,'uploadImage']);
     Route::post('/patients',[PatientController::class, 'store']);//add a patient and Book an appointment
-    Route::get('/doctors/{id}/schedule',[PatientController::class, 'getDoctorSchedule']);
+    Route::get('/doctors/{id}/schedule',[PatientController::class, 'getDoctorSchedule']);////////////////////////////////////
 });
 //Admin ,doctor and receptionist login
 
@@ -50,7 +55,7 @@ Route::middleware(['auth:sanctum','is_admin'])->group(function () {
     Route::get('/users',[UserController::class, 'index']);//get all users
     Route::get('/doctors',[DoctorController::class, 'index']);//get all doctors with all relationships
 
-    Route::get('/departments/doctors',[DepartmentController::class, 'indexWithDoctors']);//get all departments with doctors
+    Route::get('/departments/doctors',[DepartmentController::class, 'index']);//get all departments with doctors
     Route::post('/departments/create',[DepartmentController::class, 'store']);//add a department
     Route::put('/departments/{id}',[DepartmentController::class, 'update']);
     Route::delete('/departments/{id}',[DepartmentController::class, 'destroy']);//delete a department
