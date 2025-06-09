@@ -18,9 +18,9 @@ class Appointment extends Model
         return $this->belongsTo(Patient::class);
     }
 
-    public function availableSlots()
+    public function slot()
     {
-        return $this->hasMany(AvailableSlot::class);
+        return $this->belongsTo(AvailableSlot::class);
     }
 
     public function department()

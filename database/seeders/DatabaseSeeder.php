@@ -17,8 +17,10 @@ class DatabaseSeeder extends Seeder
        $this->call([DepartmentsSeeder::class]);
         $this->call([RoleSeeder::class]);
        $this->call([AdminSeeder::class]);
-//       $this->call([EmployeeSeeder::class]);
         $this->call([DaySeeder::class]);
         $this->call([AvailableSlotsSeeder::class]);
+        $this->call([UserSeeder::class]);
+        $this->call([EmployeeSeeder::class]);
+        $this->call([AppointmentSeeder::class]);
     }
 }

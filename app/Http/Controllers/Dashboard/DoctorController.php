@@ -29,7 +29,8 @@ class DoctorController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $doctor=Doctor::with('employee','department')->findOrFail($id);
+        return response()->json($doctor,200);
     }
 
     /**

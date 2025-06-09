@@ -12,7 +12,7 @@ class AvailableSlot extends Model
         return $this->belongsToMany(Doctor::class);
     }
 
-    public function appointment(){
-        return $this->belongsTo(Appointment::class);
+    public function appointments(){
+        return $this->hasMany(Appointment::class);
     }
 }

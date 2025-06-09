@@ -2,66 +2,99 @@
 
 namespace Database\Seeders;
 
-use App\Models\Employee;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use App\Models\Employee;
+use App\Models\Doctor;
+use App\Models\Time;
+use Spatie\Permission\Models\Role;
+use Faker\Factory as Faker;
 
 class EmployeeSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run(): void
+    public function run()
     {
-        $employees = [
-            [
-                'first_name' => 'Omar',
-                'last_name' => 'Hernandez',
-                'email' => 'omar@clinic.com',
-                'role' => 'doctor',
-                'password' => Hash::make('password'),
-                'salary' => 5000,
-            ],
-            [
-                'first_name' => 'Lina',
-                'last_name' => 'Hernandez',
-                'email' => 'lina@clinic.com',
-                'role' => 'doctor',
-                'password' => Hash::make('password'),
-                'salary' => 5000,
-            ],
-            [
-                'first_name' => 'Aya ',
-                'last_name' => 'Hernandez',
-                'email' => 'aya@clinic.com',
-                'role' => 'receptionist',
-                'password' => Hash::make('password'),
-                'salary' => 5000,
-            ],
-            [
-                'first_name' => 'Rami Reception',
-                'last_name' => 'Hernandez',
-                'email' => 'rami@clinic.com',
-                'role' => 'receptionist',
-                'password' => Hash::make('password'),
-                'salary' => 5000,
-            ],
-        ];
+        $faker = Faker::create();
 
-        foreach ($employees as $emp) {
-            $employee = Employee::create([
-                'first_name' => $emp['first_name'],
-                'last_name' => $emp['last_name'],
-                'email' => $emp['email'],
-                'password' =>$emp['password'],
-                'role' => $emp['role'],
-                'salary' => $emp['salary'],
-            ]);
-            $employee->assignRole($emp['role']);
+        $doctorRole = Role::firstOrCreate(['name' => 'doctor']);
+        $receptionistRole = Role::firstOrCreate(['name' => 'receptionist']);
+
+        $departments = [2, 3, 4];
+
+        $firstThreeDays = [0, 1, 2]; // الأحد، الإثنين، الثلاثاء
+        $lastFourDays = [3, 4, 5, 6]; // الأربعاء - السبت
+
+        $doctorIndex = 1;
+
+        foreach ($departments as $departmentId) {
+            for ($i = 0; $i < 4; $i++) {
+                $firstName = $faker->firstNameMale;
+                $lastName = $faker->lastName;
+
+                $doctor = Employee::create([
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'email' => "doctor{$doctorIndex}@example.com",
+                    'password' => Hash::make('password'),
+                    'role' => 'doctor',
+                    'salary' => 5000 + $doctorIndex * 100,
+                ]);
+                $doctor->assignRole($doctorRole);
+
+                $doctorModel = Doctor::create([
+                    'employee_id' => $doctor->id,
+                    'department_id' => $departmentId,
+                    'certificate' => "Certificate $doctorIndex",
+                    'qualifications' => "Qualification $doctorIndex",
+                    'years_of_experience' => 3 + $doctorIndex,
+                    'medical_license_number' => "MLN-1000$doctorIndex",
+                    'image' => "doctors/doctor$doctorIndex.jpg",
+                ]);
+
+                $isMorning = ($i % 2 === 0);
+                $start_time = $isMorning ? '09:00:00' : '14:00:00';
+                $end_time = $isMorning ? '13:00:00' : '18:00:00';
+
+                $time = Time::create([
+                    'employee_id' => $doctor->id,
+                    'start_time' => $start_time,
+                    'end_time' => $end_time,
+                ]);
+
+                $days = $i < 2 ? $firstThreeDays : $lastFourDays;
+                foreach ($days as $day_id) {
+                    DB::table('day_time')->insert([
+                        'time_id' => $time->id,
+                        'day_id' => $day_id,
+                    ]);
+                }
+
+                // ربط الـ doctor بـ available_slots حسب فترة دوامه
+                $slotIds = $isMorning ? range(1, 8) : range(9, 16);
+                DB::table('available_slot_doctor')->insert(
+                    array_map(function ($slotId) use ($doctorModel) {
+                        return [
+                            'doctor_id' => $doctorModel->id,
+                            'available_slot_id' => $slotId
+                        ];
+                    }, $slotIds)
+                );
+
+                $doctorIndex++;
+            }
         }
 
-
+        for ($j = 1; $j <= 4; $j++) {
+            $receptionist = Employee::create([
+                'first_name' => "ReceptionistFirst$j",
+                'last_name' => "ReceptionistLast$j",
+                'email' => "receptionist$j@example.com",
+                'password' => Hash::make('password'),
+                'role' => 'receptionist',
+                'salary' => 3000 + $j * 100,
+            ]);
+            $receptionist->assignRole($receptionistRole);
+        }
     }
 }

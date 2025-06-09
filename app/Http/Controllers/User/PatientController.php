@@ -55,7 +55,6 @@ class PatientController extends Controller
                 ->where('available_slot_id', $request->slot_id)
                 ->where('doctor_id', $request->doctor_id)
                 ->exists();
-
             if (!$exists) {
                 throw ValidationException::withMessages([
                     'slot_id' => 'this time does not belong to this doctor',
@@ -67,10 +66,9 @@ class PatientController extends Controller
                 ->where('slot_id', $request->slot_id)
                 ->where('date', $request->date)
                 ->exists();
-
             if ($alreadyBooked) {
                 throw ValidationException::withMessages([
-                    'slot_id' => 'this time slot is already booked fro this doctor',
+                    'slot_id' => 'this time slot is already booked for this doctor',
                 ]);
             }
 
@@ -79,26 +77,39 @@ class PatientController extends Controller
                 ->where('slot_id', $request->slot_id)
                 ->where('date', $request->date)
                 ->exists();
-
             if ($patientConflict) {
                 throw ValidationException::withMessages([
-                    'slot_id' => ' Book denied: you already have another appointment at this time.',
+                    'slot_id' => 'Book denied: you already have another appointment at this time.',
                 ]);
             }
 
             // 7. التأكد من أن الدكتور يعمل في هذا اليوم
             $dayOfWeek = Carbon::parse($request->date)->dayOfWeek; // 0 = الأحد ... 6 = السبت
-
             $doctorWorksThatDay = DB::table('times')
                 ->join('day_time', 'times.id', '=', 'day_time.time_id')
-                ->where('times.employee_id', $request->doctor_id) // إذا كان جدول الدوام يستخدم doctor_id غيّر هذا السطر
+                ->where('times.employee_id', $request->doctor_id) // غيّر هذا السطر إذا كان جدول الدوام يستخدم doctor_id
                 ->where('day_time.day_id', $dayOfWeek)
                 ->exists();
-
             if (!$doctorWorksThatDay) {
                 throw ValidationException::withMessages([
                     'date' => 'The doctor does not work in this day',
                 ]);
+            }
+
+            // 7.5 تحقق من شرط المراجعة (follow_up)
+            if ($request->type === 'follow_up') {
+                $visitedRecently = Appointment::where('doctor_id', $request->doctor_id)
+                    ->where('patient_id', $patient->id)
+                    ->where('type', 'check_up') // فقط المواعيد من نوع معاينة
+                    ->whereDate('date', '>=', Carbon::parse($request->date)->subDays(15))
+                    ->whereDate('date', '<', $request->date)
+                    ->exists();
+
+                if (!$visitedRecently) {
+                    throw ValidationException::withMessages([
+                        'type' => 'You can only book a follow-up if you have visited this doctor within the last 15 days.',
+                    ]);
+                }
             }
 
             // 8. قفل الـ slot للحجز الآمن
@@ -113,7 +124,7 @@ class PatientController extends Controller
                 'slot_id'             => $request->slot_id,
                 'type'                => $request->type,
                 'with_medical_report' => $request->with_medical_report ?? false,
-                'specialization'     =>$specialization
+                'specialization'      => $specialization
             ]);
         });
 
@@ -191,9 +202,117 @@ class PatientController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(BookAppointmentRequest $request, $id)
     {
-        //
+        DB::transaction(function () use ($request, $id) {
+            $appointment = Appointment::findOrFail($id);
+
+            $user = auth()->user();
+            $patient = $appointment->patient;
+
+            // التأكد أن المستخدم هو صاحب الموعد
+            if ($user->id !== $patient->user_id) {
+                throw ValidationException::withMessages([
+                    'unauthorized' => 'You are not authorized to update this appointment.',
+                ]);
+            }
+
+            // التأكد أن الموعد لم يمر بعد
+            if (Carbon::parse($appointment->date)->isPast()) {
+                throw ValidationException::withMessages([
+                    'date' => 'You cannot update a past appointment.',
+                ]);
+            }
+
+            $doctor = Doctor::findOrFail($request->doctor_id);
+            if ($doctor->department_id !== (int) $request->department_id) {
+                throw ValidationException::withMessages([
+                    'department_id' => 'this doctor does not work in that department',
+                ]);
+            }
+
+            $department_id = $doctor->department_id;
+            $specialization = $doctor->department->name;
+
+            // التأكد أن الـ slot فعلاً مربوط بهذا الدكتور
+            $exists = DB::table('available_slot_doctor')
+                ->where('available_slot_id', $request->slot_id)
+                ->where('doctor_id', $request->doctor_id)
+                ->exists();
+            if (!$exists) {
+                throw ValidationException::withMessages([
+                    'slot_id' => 'this time does not belong to this doctor',
+                ]);
+            }
+
+            // التأكد من عدم وجود موعد آخر لنفس الدكتور في هذا التاريخ والوقت (باستثناء الموعد الحالي)
+            $alreadyBooked = Appointment::where('doctor_id', $request->doctor_id)
+                ->where('slot_id', $request->slot_id)
+                ->where('date', $request->date)
+                ->where('id', '!=', $appointment->id)
+                ->exists();
+            if ($alreadyBooked) {
+                throw ValidationException::withMessages([
+                    'slot_id' => 'this time slot is already booked for this doctor',
+                ]);
+            }
+
+            // التأكد من أن المريض لا يملك موعدًا آخر في نفس التاريخ والوقت (باستثناء الموعد الحالي)
+            $patientConflict = Appointment::where('patient_id', $patient->id)
+                ->where('slot_id', $request->slot_id)
+                ->where('date', $request->date)
+                ->where('id', '!=', $appointment->id)
+                ->exists();
+            if ($patientConflict) {
+                throw ValidationException::withMessages([
+                    'slot_id' => 'Book denied: you already have another appointment at this time.',
+                ]);
+            }
+
+            // التأكد أن الدكتور يعمل في هذا اليوم
+            $dayOfWeek = Carbon::parse($request->date)->dayOfWeek;
+            $doctorWorksThatDay = DB::table('times')
+                ->join('day_time', 'times.id', '=', 'day_time.time_id')
+                ->where('times.employee_id', $request->doctor_id)
+                ->where('day_time.day_id', $dayOfWeek)
+                ->exists();
+            if (!$doctorWorksThatDay) {
+                throw ValidationException::withMessages([
+                    'date' => 'The doctor does not work in this day',
+                ]);
+            }
+
+            // تحقق من شرط المراجعة
+            if ($request->type === 'follow_up') {
+                $visitedRecently = Appointment::where('doctor_id', $request->doctor_id)
+                    ->where('patient_id', $patient->id)
+                    ->where('type', 'check_up')
+                    ->whereDate('date', '>=', Carbon::parse($request->date)->subDays(15))
+                    ->whereDate('date', '<', $request->date)
+                    ->exists();
+
+                if (!$visitedRecently) {
+                    throw ValidationException::withMessages([
+                        'type' => 'You can only book a follow-up if you have visited this doctor within the last 15 days.',
+                    ]);
+                }
+            }
+
+            // قفل الـ slot للحجز الآمن
+            $slot = AvailableSlot::lockForUpdate()->findOrFail($request->slot_id);
+            // تحديث بيانات الموعد
+            $appointment->update([
+                'doctor_id'           => $request->doctor_id,
+                'department_id'       => $department_id,
+                'date'                => $request->date,
+                'slot_id'             => $request->slot_id,
+                'type'                => $request->type,
+                'with_medical_report' => $request->with_medical_report ?? false,
+                'specialization'      => $specialization
+            ]);
+        });
+
+        return response()->json(['message' => 'Appointment updated successfully']);
     }
 
     /**
@@ -203,4 +322,6 @@ class PatientController extends Controller
     {
         //
     }
+
+
 }
