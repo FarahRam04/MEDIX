@@ -17,6 +17,7 @@ use App\Http\Controllers\EmailController;
 use App\Http\Controllers\User\PatientController;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\User\UserControllerAuth;
+use App\Http\Controllers\firebasee\NotificationController;
 use App\Http\Controllers\WhatsAppController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -124,6 +125,8 @@ Route::post('password/reset/email', ResetPasswordEmailController::class);
 Route::post('password/send/whatsapp',ForgetPasswordWhatsappController::class);
 Route::post('password/code/check/whatsapp', CodeCheckWhatsappController::class);
 Route::post('password/reset/whatsapp', ResetPasswordWhatsappController::class);
+
+Route::post('/send-notification', [NotificationController::class, 'send']);
 
 
 
