@@ -37,6 +37,10 @@ Route::get('/default_times',[BookingPage::class, 'getSlotsByRange']);//default m
 Route::get('/department/{id}',[BookingPage::class, 'getDepartmentAvailability']);
 Route::get('/availableSlotsByShift',[BookingPage::class, 'getShiftSlotsWithDoctor']);
 Route::get('/doctors/{id}',[DoctorController::class, 'show']);///////////this need a resource to design the response///////////////
+Route::get('/appointments/{id}/can_cancel',[AppointmentController::class, 'canCancelAppointment']);//get an appointment details
+Route::get('/appointments/{id}',[AppointmentController::class, 'show']);//get an appointment details
+
+
 
 //routes only for users
 Route::middleware(['auth:sanctum','is_user'])->group(function () {
@@ -45,6 +49,7 @@ Route::middleware(['auth:sanctum','is_user'])->group(function () {
     Route::post('/appointments',[PatientController::class, 'store']);//add a patient and Book an appointment
     Route::put('/appointments/{id}',[PatientController::class, 'update']);
     Route::get('/patient/appointments',[AppointmentController::class, 'getPatientAppointments']);
+    Route::delete('/appointments/{id}',[AppointmentController::class, 'destroy']);
 
 
 });

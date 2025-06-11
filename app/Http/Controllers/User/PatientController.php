@@ -97,7 +97,7 @@ class PatientController extends Controller
             }
 
             // 7.5 تحقق من شرط المراجعة (follow_up)
-            if ($request->type === 'follow_up') {
+            if ($request->request_type_id === 2) {
                 $visitedRecently = Appointment::where('doctor_id', $request->doctor_id)
                     ->where('patient_id', $patient->id)
                     ->where('type', 'check_up') // فقط المواعيد من نوع معاينة
@@ -122,7 +122,7 @@ class PatientController extends Controller
                 'department_id'       => $department_id,
                 'date'                => $request->date,
                 'slot_id'             => $request->slot_id,
-                'type'                => $request->type,
+                'type'                => $request->request_type_id ===1 ?'check_up' : 'follow_up',
                 'with_medical_report' => $request->with_medical_report ?? false,
                 'specialization'      => $specialization
             ]);
@@ -283,7 +283,7 @@ class PatientController extends Controller
             }
 
             // تحقق من شرط المراجعة
-            if ($request->type === 'follow_up') {
+            if ($request->request_type_id === 2) {
                 $visitedRecently = Appointment::where('doctor_id', $request->doctor_id)
                     ->where('patient_id', $patient->id)
                     ->where('type', 'check_up')
@@ -306,7 +306,7 @@ class PatientController extends Controller
                 'department_id'       => $department_id,
                 'date'                => $request->date,
                 'slot_id'             => $request->slot_id,
-                'type'                => $request->type,
+                'type'                => $request->type === 1?'check_up':'follow_up',
                 'with_medical_report' => $request->with_medical_report ?? false,
                 'specialization'      => $specialization
             ]);

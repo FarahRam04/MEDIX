@@ -24,7 +24,7 @@ class   BookAppointmentRequest extends FormRequest
         return [
             'department_id'    => 'required|exists:departments,id',
             'doctor_id'       => 'required|exists:employees,id',
-            'type'            => 'required|in:check_up,follow_up',
+            'request_type_id' => 'required|in:1,2',
             'date'            => 'required|date|after_or_equal:today',
             'slot_id'         => 'required|exists:available_slots,id',
             'with_medical_report'=>'boolean',
