@@ -45,6 +45,22 @@ class AdminAndEmployeeAuth extends Controller
         ], 401)->withCookie(cookie('laravel_session', session()->getId(),60));
     }
 
+    public function logout(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'لم يتم تسجيل الدخول',
+            ], 401);
+        }
+        $user->currentAccessToken()->delete();
+        return response()->json([
+            'status' => true,
+            'message' => 'تم تسجيل الخروج بنجاح',
+        ])->withCookie(cookie()->forget('laravel_session'));
+    }
+
 
 
 
