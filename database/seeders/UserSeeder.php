@@ -25,6 +25,10 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'is_patient' => true,
                 'image' => null,
+                'fcm_token' => $faker->uuid, // أو أي نص وهمي
+                'fcm_token_updated_at' => now(),
+
+
             ]);
 
             Patient::create([

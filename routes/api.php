@@ -56,7 +56,9 @@ Route::middleware(['auth:sanctum','is_user'])->group(function () {
 });
 //Admin ,doctor and receptionist login
 
-Route::post('/login', [AdminAndEmployeeAuth::class, 'login']);//you can hide anything in Employee or Admin Model
+Route::post('/login', [AdminAndEmployeeAuth::class, 'login']);//
+Route::post('/logout', [AdminAndEmployeeAuth::class, 'logout'])->middleware('auth:sanctum');
+//you can hide anything in Employee or Admin Model
 
 //routs only for admins
 Route::middleware(['auth:sanctum','is_admin'])->group(function () {
@@ -127,7 +129,7 @@ Route::post('password/code/check/whatsapp', CodeCheckWhatsappController::class);
 Route::post('password/reset/whatsapp', ResetPasswordWhatsappController::class);
 
 Route::post('/send-notification', [NotificationController::class, 'send']);
-
+Route::post('/refresh_token',[UserControllerAuth::class,'refreshToken'])->middleware('auth:sanctum');
 
 
 
