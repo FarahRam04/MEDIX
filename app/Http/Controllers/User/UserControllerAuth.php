@@ -15,11 +15,7 @@ class UserControllerAuth extends Controller
     public function register(RegisterUserRequest $request)
     {
         $validated = $request->validated();
-        if ($request->has('fcm_token') && $request->fcm_token) {
-            $validated['fcm_token'] = $request->fcm_token;
-            $validated['fcm_token_updated_at'] = now(); // إذا العمود موجود
-        }
-
+        $validated['fcm_token_updated_at'] = now(); // إذا العمود موجود
         $validated['password'] = Hash::make($validated['password']);
         $user = User::create($validated);
 
@@ -81,6 +77,10 @@ class UserControllerAuth extends Controller
             return response()->json(['message' => 'Invalid email or password'], 401);
         }
 
+        $user->update([
+            'fcm_token' => $validated['fcm_token'],
+            'fcm_token_updated_at' => now(),
+        ]);
         $token = $user->createToken('auth_token for U.'. $user->first_name)->plainTextToken;
 
         return response()->json([
