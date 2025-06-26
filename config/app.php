@@ -125,8 +125,4 @@ return [
 
 
 
-    'providers' => [
-        App\Console\Scheduling\ScheduleServiceProvider::class,
-
-    ],
 ];

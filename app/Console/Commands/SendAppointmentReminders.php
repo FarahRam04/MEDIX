@@ -36,6 +36,7 @@ class SendAppointmentReminders extends Command
 
             // إرسال الإشعار
             app(NotificationService::class)->sendFCMNotification($user->fcm_token, $title, $body);
+            $this->info(" إشعار أُرسل إلى المستخدم: {$user->first_name} (ID: {$user->id}) في {$appointmentTime}");
 
         }
 
