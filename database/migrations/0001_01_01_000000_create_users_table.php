@@ -20,9 +20,12 @@ return new class extends Migration
             $table->string('phone_number');
             $table->string('email');
             $table->string('password');
+            $table->text('fcm_token');
+            $table->timestamp('fcm_token_updated_at')->nullable();
             $table->boolean('is_patient')->default(false);
             $table->string('image')->nullable();
             $table->timestamps();
+
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

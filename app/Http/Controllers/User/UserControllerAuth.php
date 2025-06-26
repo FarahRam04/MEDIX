@@ -15,17 +15,37 @@ class UserControllerAuth extends Controller
     public function register(RegisterUserRequest $request)
     {
         $validated = $request->validated();
+        $validated['fcm_token_updated_at'] = now(); // إذا العمود موجود
         $validated['password'] = Hash::make($validated['password']);
         $user = User::create($validated);
+
         Auth::login($user);
+
         $this->uploadImage($request);
+
         $token = $user->createToken('auth_token for u.' . $user->first_name)->plainTextToken;
 
         $user->refresh();
+
         return response()->json([
             'message' => 'user Registered successfully',
             'User' => $user,
             'token' => $token,
+        ]);
+    }
+    public function refreshToken(Request $request){
+        $request->validate([
+            'fcm_token'=> 'required|string'
+        ]);
+        $user = Auth::user();
+        if ($user) {
+            $user->update([
+                'fcm_token' => $request->fcm_token,
+                'fcm_token_updated_at' => now(),
+            ]);
+        }
+        return response()->json([
+            'message' => 'FCM token updated successfully',
         ]);
     }
     public function uploadImage(Request $request){
@@ -58,6 +78,10 @@ class UserControllerAuth extends Controller
             return response()->json(['message' => 'Invalid email or password'], 401);
         }
 
+        $user->update([
+            'fcm_token' => $validated['fcm_token'],
+            'fcm_token_updated_at' => now(),
+        ]);
         $token = $user->createToken('auth_token for U.'. $user->first_name)->plainTextToken;
 
         return response()->json([
