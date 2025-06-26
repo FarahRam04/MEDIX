@@ -18,11 +18,16 @@ class SendAppointmentReminders extends Command
             ->where('status', 'pending')
             ->get();
 
+        if ($appointments->isEmpty()) {
+            $this->info(" NO APPOINTMENTS TOMORROW");
+            return;
+        }
         foreach ($appointments as $appointment) {
+            //جلب المستخدم متعلق بالحجز
             $user = $appointment->patient->user;
 
-            // تحقق من وجود توكين صالح
-            if (!$user || !$user->fcm_token) continue;
+
+            if (!$user || !$user->fcm_token) continue;//تجاهل ما تبقى من حلقة عند تنقيذ الشرط
 
             $appointmentTime = $appointment->date . ' ' . $appointment->slot->start_time;
 
@@ -34,6 +39,6 @@ class SendAppointmentReminders extends Command
 
         }
 
-        $this->info('Appointment reminders sent.');
+        $this->info(" تم ارسال جميع الاشعارات بنجاح");
     }
 }
