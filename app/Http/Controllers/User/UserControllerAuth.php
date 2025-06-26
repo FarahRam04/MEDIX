@@ -38,10 +38,11 @@ class UserControllerAuth extends Controller
             'fcm_token'=> 'required|string'
         ]);
         $user = Auth::user();
-        if ($user && $request->has('fcm_token') && $request->fcm_token) {
-            $user->fcm_token = $request->fcm_token;
-            $user->fcm_token_updated_at = now(); // إن وجد
-            $user->save();
+        if ($user) {
+            $user->update([
+                'fcm_token' => $request->fcm_token,
+                'fcm_token_updated_at' => now(),
+            ]);
         }
         return response()->json([
             'message' => 'FCM token updated successfully',
