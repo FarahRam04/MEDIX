@@ -38,7 +38,7 @@ Route::get('/default_times',[BookingPage::class, 'getSlotsByRange']);//default m
 Route::get('/department/{id}',[BookingPage::class, 'getDepartmentAvailability']);
 Route::get('/availableSlotsByShift',[BookingPage::class, 'getShiftSlotsWithDoctor']);
 Route::get('/doctors/{id}',[DoctorController::class, 'show']);///////////this need a resource to design the response///////////////
-Route::get('/appointments/{id}/can_cancel',[AppointmentController::class, 'canCancelAppointment']);//get an appointment details
+Route::get('/appointments/{id}/can_cancel',[AppointmentController::class, 'canCancelAppointment']);
 Route::get('/appointments/{id}',[AppointmentController::class, 'show']);//get an appointment details
 
 
