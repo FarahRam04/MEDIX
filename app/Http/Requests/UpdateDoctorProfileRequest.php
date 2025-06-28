@@ -27,6 +27,7 @@ class UpdateDoctorProfileRequest extends FormRequest
             'qualifications'=>'nullable|string',
             'years_of_experience'=>'nullable|numeric',
             'image'=>'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'bio'=>'required|string',
         ];
     }
 }

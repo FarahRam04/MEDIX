@@ -27,4 +27,21 @@ class Appointment extends Model
     {
         return $this->belongsTo(Department::class);
     }
+
+    public function medications()
+    {
+        return $this->hasMany(Medication::class);
+    }
+
+    public function labTests(){
+        return $this->hasMany(LabTest::class);
+    }
+    public function surgeries()
+    {
+        return $this->hasMany(Surgery::class);
+    }
+    public function advices()
+    {
+        return $this->hasMany(Advice::class);
+    }
 }

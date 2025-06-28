@@ -51,6 +51,11 @@ Route::middleware(['auth:sanctum','is_user'])->group(function () {
     Route::put('/appointments/{id}',[PatientController::class, 'update']);
     Route::get('/patient/appointments',[AppointmentController::class, 'getPatientAppointments']);
     Route::delete('/appointments/{id}',[AppointmentController::class, 'destroy']);
+    Route::get('/medications/{id}',[DoctorController::class, 'getMedications']);
+    Route::get('/lab_tests/{id}',[DoctorController::class, 'getLabTests']);
+    Route::get('/surgeries/{id}',[DoctorController::class, 'getSurgeries']);
+    Route::get('/advices/{id}',[DoctorController::class, 'getAdvices']);
+
 
 
 });
@@ -93,6 +98,7 @@ Route::middleware(['auth:sanctum','is_employee'])->group(function () {
 
 Route::middleware(['auth:sanctum','is_doctor'])->group(function () {
     Route::post('/update_profile',[DoctorController::class, 'update']);
+    Route::post('/prescription/{id}',[DoctorController::class, 'writePrescription']);
 
 });
 

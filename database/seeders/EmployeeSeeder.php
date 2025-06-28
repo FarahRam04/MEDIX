@@ -13,8 +13,16 @@ use Faker\Factory as Faker;
 
 class EmployeeSeeder extends Seeder
 {
+
     public function run()
     {
+        $departmentSpecialists = [
+            1 => 'General Practitioner',
+            2 => 'Cardiologist',
+            3 => 'Dermatologist',
+            4 => 'Gastroenterologist',
+        ];
+
         $faker = Faker::create();
 
         $doctorRole = Role::firstOrCreate(['name' => 'doctor']);
@@ -42,14 +50,22 @@ class EmployeeSeeder extends Seeder
                 ]);
                 $doctor->assignRole($doctorRole);
 
+                $specialist = $departmentSpecialists[$departmentId];
+                $years_of_experience = 3 + $doctorIndex;
+
                 $doctorModel = Doctor::create([
                     'employee_id' => $doctor->id,
                     'department_id' => $departmentId,
                     'certificate' => "Certificate $doctorIndex",
                     'qualifications' => "Qualification $doctorIndex",
-                    'years_of_experience' => 3 + $doctorIndex,
+                    'years_of_experience' => $years_of_experience,
                     'medical_license_number' => "MLN-1000$doctorIndex",
-                    'image' => "doctors/doctor$doctorIndex.jpg",
+                    'image' => "doctors/doctor$doctorIndex.png",
+
+                    'specialist' => $specialist,
+                    'rating' => $faker->randomFloat(1, 3, 5),
+                    'number_of_treatments' => $faker->numberBetween(0, 100),
+                    'bio' => "Dr. $firstName $lastName has over $years_of_experience years of experience in $specialist.",
                 ]);
 
                 $isMorning = ($i % 2 === 0);

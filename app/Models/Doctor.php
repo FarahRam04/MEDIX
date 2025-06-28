@@ -40,6 +40,11 @@ class Doctor extends Model
         return $this->belongsToMany(AvailableSlot::class);
     }
 
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class);
+    }
+
 
 
 

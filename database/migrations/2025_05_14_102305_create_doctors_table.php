@@ -20,6 +20,13 @@ return new class extends Migration
             $table->string('years_of_experience')->nullable();
             $table->string('medical_license_number')->nullable();
             $table->string('image')->nullable();
+
+            $table->string('specialist')->default('undefined');
+            $table->decimal('rating',2,1)->default(0);
+            $table->unsignedBigInteger('number_of_treatments')->default(0);
+            $table->string('bio')->default('');
+            $table->unsignedInteger('batches_count')->default(0);
+
             $table->timestamps();
         });
     }
