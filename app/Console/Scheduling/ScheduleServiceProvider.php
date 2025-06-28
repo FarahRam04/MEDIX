@@ -13,8 +13,6 @@ class ScheduleServiceProvider extends ServiceProvider
         // أمر التذكير بالمواعيد كل ساعة
         $schedule->command('reminders:appointments')->hourly();
 
-        // أو إذا تريده يومياً الساعة 12
-        // $schedule->command('reminders:appointments')->dailyAt('12:00');
     }
 }
 

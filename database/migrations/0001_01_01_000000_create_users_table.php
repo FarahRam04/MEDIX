@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('phone_number');
             $table->string('email');
             $table->string('password');
-            $table->text('fcm_token');
+            $table->text('fcm_token')->nullable();
             $table->timestamp('fcm_token_updated_at')->nullable();
             $table->boolean('is_patient')->default(false);
             $table->string('image')->nullable();

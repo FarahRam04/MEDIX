@@ -17,8 +17,8 @@ use App\Http\Controllers\EmailController;
 use App\Http\Controllers\User\PatientController;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\User\UserControllerAuth;
-use App\Http\Controllers\firebasee\NotificationController;
 use App\Http\Controllers\WhatsAppController;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -67,9 +67,13 @@ Route::post('/logout', [AdminAndEmployeeAuth::class, 'logout'])->middleware('aut
 
 //routs only for admins
 Route::middleware(['auth:sanctum','is_admin'])->group(function () {
-    Route::get('/employees',[EmployeeController::class, 'index']);
-    Route::post('/add_employee',[EmployeeController::class, 'store']);//add employee
-    Route::delete('/employees/{id}',[EmployeeController::class, 'destroy']);
+    Route::controller(EmployeeController::class)->group(function () {
+        Route::get('/employees', 'index');
+        Route::post('/add_employee', 'store');
+        Route::get('/employees/show/{id}', 'show');
+        Route::Put('/employee/update/{id}', 'update');
+        Route::delete('/employee/destroy/{id}', 'destroy');
+    });
 
     Route::get('/users',[UserController::class, 'index']);//get all users
     Route::get('/doctors',[DoctorController::class, 'index']);//get all doctors with all relationships
@@ -134,8 +138,9 @@ Route::post('password/send/whatsapp',ForgetPasswordWhatsappController::class);
 Route::post('password/code/check/whatsapp', CodeCheckWhatsappController::class);
 Route::post('password/reset/whatsapp', ResetPasswordWhatsappController::class);
 
-Route::post('/send-notification', [NotificationController::class, 'send']);
+//Route::post('/send-notification', [NotificationController::class, 'send']);
 Route::post('/refresh_token',[UserControllerAuth::class,'refreshToken'])->middleware('auth:sanctum');
 
 
-
+//Route::get('/appointments/tomorrow', [\App\Http\Contrller\getAppointmentController::class, 'getTomorrowAppointments']);
+Route::post('/firebase/send', [NotificationService::class, 'send']);
