@@ -31,6 +31,8 @@ return new class extends Migration
             $table->boolean('payment_status')->default(false);
 
             $table->boolean('with_medical_report')->default(false);
+            $table->boolean('is_prescription_viewed')->default(false);
+            $table->boolean('is_rated')->default(false);
 
             $table->timestamps();
         });

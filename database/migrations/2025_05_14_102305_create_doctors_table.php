@@ -17,15 +17,17 @@ return new class extends Migration
             $table->foreignId('department_id')->default(1)->constrained()->onDelete('cascade');
             $table->string('certificate')->nullable();
             $table->string('qualifications')->nullable();
-            $table->string('years_of_experience')->nullable();
             $table->string('medical_license_number')->nullable();
             $table->string('image')->nullable();
-
             $table->string('specialist')->default('undefined');
-            $table->decimal('rating',2,1)->default(0);
             $table->unsignedBigInteger('number_of_treatments')->default(0);
             $table->string('bio')->default('');
-            $table->unsignedInteger('batches_count')->default(0);
+            $table->string('years_of_experience')->nullable();
+            //rating
+            $table->float('initial_rating')->default(0);
+            $table->float('final_rating')->default(0);
+            $table->unsignedInteger('rating_votes')->default(0);
+            $table->unsignedInteger('rating_total')->default(0);
 
             $table->timestamps();
         });

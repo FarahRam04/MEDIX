@@ -7,6 +7,7 @@ use App\Models\Appointment;
 use App\Models\LabTest;
 use App\Models\Surgery;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 use App\Http\Controllers\Controller;
@@ -62,19 +63,7 @@ class DoctorController extends Controller
         $doctor->medical_license_number=$request->input('medical_license_number', $doctor->medical_license_number);
         $years_of_experience=$request->input('years_of_experience', $doctor->years_of_experience);
         $doctor->years_of_experience =$years_of_experience ;
-        if ($years_of_experience <= 1) {
-            $ratio = 3.1;
-        } elseif ($years_of_experience <= 4) {
-            $ratio = 3.6;
-        } elseif ($years_of_experience <= 9) {
-            $ratio = 4.15;
-        } elseif ($years_of_experience <= 15) {
-            $ratio = 4.5;
-        } else {
-            $ratio = 4.7;
-        }
 
-        $doctor->rating = $ratio;
 
         $departmentSpecialists = [
             1 => 'General Practitioner',
@@ -96,13 +85,59 @@ class DoctorController extends Controller
             $doctor->image = $imagePath;
         }
 
-
-
+        /////////////Rating
+        $doctor->initial_rating=Doctor::getInitialRatingFromExperience($doctor->years_of_experience);
+        $doctor->rating_votes = 0;
+        $doctor->rating_total = 0;
+        $doctor->final_rating = $doctor->initial_rating;
         $doctor->save();
 
         return response()->json(['message' => 'Profile updated successfully.', 'doctor' => $doctor->load('department','employee')], 200);
 
     }
+    // إضافة تقييم جديد لدكتور
+
+    public function rate(Request $request)
+    {
+        $validated = $request->validate([
+            'appointment_id' => 'required|exists:appointments,id',
+            'rating' => 'required|numeric|min:1|max:5',
+        ]);
+
+        $user = Auth::user();
+
+        // جلب الموعد والتأكد من علاقته باليوزر والدكتور
+        $appointment = Appointment::where('id', $validated['appointment_id'])
+            ->where('patient_id', $user->id)
+            ->first();
+
+        if (!$appointment) {
+            return response()->json([
+                'message' => 'هذا الموعد غير مرتبط بك أو غير موجود',
+            ], 403);
+        }
+        if($appointment->status != 'completed'){
+           return response()->json([
+               'message'=>'لا يمكنك تقييم الدكتور قبل اتمام الزيارة '
+           ]);
+    }
+        $is_rated=$appointment->is_rated;
+        if($is_rated){
+            return response()->json(['Sorry,you already rated this appointment.'], 403);
+        }
+
+        $doctor = Doctor::findOrFail($appointment->doctor_id);
+
+        // تطبيق التقييم على الدكتور
+        $doctor->applyRating($validated['rating']);
+
+        return response()->json([
+            'message' => 'تمت إضافة التقييم بنجاح',
+            'new_final_rating' => round($doctor->final_rating, 2),
+            'total_votes' => $doctor->rating_votes,
+        ]);
+    }
+
 
     /**
      * Remove the specified resource from storage.
@@ -121,9 +156,19 @@ class DoctorController extends Controller
         }
 
         // 2. تحقق من أن الطبيب الحالي هو صاحب الموعد
-        $doctor = Auth::user();
+        $employee = Auth::user();
+
+        $doctor = DB::table('doctors')
+            ->where('employee_id', $employee->id)
+            ->first();
+
         if ($appointment->doctor_id !== $doctor->id) {
-            return response()->json(['message' => 'هذا الموعد لا يخص الطبيب الحالي'], 403);
+            return response()->json([
+                'message' => 'هذا الموعد لا يخص الطبيب الحالي',
+                'appointment->doctor_id'=>$appointment->doctor_id,
+                'token->doctor_id'=>$doctor->id
+            ], 403);
+
         }
 
         // 3. تحقق من أن الحالة pending
@@ -185,47 +230,57 @@ class DoctorController extends Controller
         ], 200);
     }
 
-    public function getMedications(string $id)
+    public function getPrescription(string $id)
     {
         $appointment = Appointment::find($id);
         if (!$appointment) {
             return response()->json(['message' => 'الموعد غير موجود'], 404);
+        }
+
+        $user=Auth::user();
+        if ($appointment->patient_id != $user->id){
+            return response()->json(['message'=> 'انت لا تستطيع الوصول الى الوصفات الطبية التي لا تخصك ..']);
         }
         $medications = $appointment->medications;
-
-        return response()->json($medications);
-    }
-    public function getLabTests(string $id)
-    {
-        $appointment = Appointment::find($id);
-        if (!$appointment) {
-            return response()->json(['message' => 'الموعد غير موجود'], 404);
-        }
         $lab_tests = $appointment->labTests;
-
-        return response()->json($lab_tests);
-    }
-    public function getSurgeries(string $id)
-    {
-        $appointment = Appointment::find($id);
-        if (!$appointment) {
-            return response()->json(['message' => 'الموعد غير موجود'], 404);
-        }
         $surgeries = $appointment->surgeries;
-
-        return response()->json($surgeries);
-    }
-
-    public function getAdvices(string $id)
-    {
-        $appointment = Appointment::find($id);
-        if (!$appointment) {
-            return response()->json(['message' => 'الموعد غير موجود'], 404);
-        }
         $advices = $appointment->advices;
 
-        return response()->json($advices);
+        $is_prescription_viewed=$appointment->is_prescription_viewed;
+        $viewed=false;
+        if ($is_prescription_viewed == 1){
+            $viewed=true;
+        }
+
+        return response()->json([
+            'medications'=>$medications,
+            'lab_tests'=>$lab_tests,
+            'surgeries'=>$surgeries,
+            'advices'=>$advices,
+            'is_prescription_viewed'=>$viewed,
+        ]);
     }
+
+    public function updatePrescription(Request $request,string $id)
+    {
+
+        $appointment = Appointment::find($id);
+        if (!$appointment) {
+            return response()->json(['message' => 'الموعد غير موجود'], 404);
+        }
+
+        $user=Auth::user();
+        if ($appointment->patient_id != $user->id){
+            return response()->json(['message'=> 'هذه الوصفة الطبية والتقييم ليس لك ']);
+        }
+
+        $request->validate(['is_prescription_viewed'=>'required|boolean']);
+        $appointment->is_prescription_viewed=$request->input('is_prescription_viewed');
+        $appointment->save();
+        return response()->json(['is_prescription_viewed'=>$appointment->is_prescription_viewed]);
+
+    }
+
 
 
 

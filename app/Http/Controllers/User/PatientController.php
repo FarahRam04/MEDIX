@@ -84,10 +84,14 @@ class PatientController extends Controller
             }
 
             // 7. التأكد من أن الدكتور يعمل في هذا اليوم
+            $employeeId = DB::table('doctors')
+                ->where('id', $request->doctor_id)
+                ->value('employee_id');
+
             $dayOfWeek = Carbon::parse($request->date)->dayOfWeek; // 0 = الأحد ... 6 = السبت
             $doctorWorksThatDay = DB::table('times')
                 ->join('day_time', 'times.id', '=', 'day_time.time_id')
-                ->where('times.employee_id', $request->doctor_id) // غيّر هذا السطر إذا كان جدول الدوام يستخدم doctor_id
+                ->where('times.employee_id', $employeeId)
                 ->where('day_time.day_id', $dayOfWeek)
                 ->exists();
             if (!$doctorWorksThatDay) {
@@ -270,10 +274,13 @@ class PatientController extends Controller
             }
 
             // التأكد أن الدكتور يعمل في هذا اليوم
+            $employeeId = DB::table('doctors')
+                ->where('id', $request->doctor_id)
+                ->value('employee_id');
             $dayOfWeek = Carbon::parse($request->date)->dayOfWeek;
             $doctorWorksThatDay = DB::table('times')
                 ->join('day_time', 'times.id', '=', 'day_time.time_id')
-                ->where('times.employee_id', $request->doctor_id)
+                ->where('times.employee_id', $employeeId)
                 ->where('day_time.day_id', $dayOfWeek)
                 ->exists();
             if (!$doctorWorksThatDay) {

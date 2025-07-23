@@ -63,7 +63,6 @@ class EmployeeSeeder extends Seeder
                     'image' => "doctors/doctor$doctorIndex.png",
 
                     'specialist' => $specialist,
-                    'rating' => $faker->randomFloat(1, 3, 5),
                     'number_of_treatments' => $faker->numberBetween(0, 100),
                     'bio' => "Dr. $firstName $lastName has over $years_of_experience years of experience in $specialist.",
                 ]);

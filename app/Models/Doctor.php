@@ -18,6 +18,38 @@ class Doctor extends Model
     }
     protected $guarded=[];
     protected $hidden=['image'];
+
+    // حساب التقييم المبدئي حسب سنوات الخبرة
+    public static function getInitialRatingFromExperience(int $years): float
+    {
+        return match (true) {
+            $years <= 1 => 3.0,
+            $years <= 3 => 3.5,
+            $years <= 5 => 4.0,
+            $years <= 10 => 4.3
+        };
+    }
+
+
+    // تحديث التقييم بعد وصول تقييم جديد
+    public function applyRating(int $newRating): void
+    {
+        $this->rating_votes += 1;
+        $this->rating_total += $newRating;
+
+        $avgUserRating = $this->rating_total / $this->rating_votes;
+
+        $initialWeight = 10; // وزن التقييم المبدئي
+
+        $this->final_rating = (
+                $avgUserRating * $this->rating_votes + $this->initial_rating * $initialWeight
+            ) / ($this->rating_votes + $initialWeight);
+
+        $this->save();
+    }
+
+
+
     public function employee()
     {
         return $this->belongsTo(Employee::class);
@@ -40,10 +72,7 @@ class Doctor extends Model
         return $this->belongsToMany(AvailableSlot::class);
     }
 
-    public function ratings()
-    {
-        return $this->hasMany(Rating::class);
-    }
+
 
 
 
