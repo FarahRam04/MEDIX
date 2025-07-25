@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Dashboard;
 use App\Http\Requests\WritePrescriptionRequest;
+use App\Http\Resources\DoctorResource;
+use App\Http\Resources\HomeResource;
 use App\Models\Advice;
 use App\Models\Appointment;
 use App\Models\LabTest;
@@ -223,6 +225,8 @@ class DoctorController extends Controller
 
         // 5. تحديث حالة الموعد
         $appointment->status = 'completed';
+        $appointment->doctor->number_of_treatments +=1;
+        $appointment->doctor->save();
         $appointment->save();
 
         return response()->json([
@@ -238,8 +242,12 @@ class DoctorController extends Controller
         }
 
         $user=Auth::user();
-        if ($appointment->patient_id != $user->id){
-            return response()->json(['message'=> 'انت لا تستطيع الوصول الى الوصفات الطبية التي لا تخصك ..']);
+
+        if ($appointment->patient->user_id != $user->id){
+            return response()->json(['message'=> 'انت لا تستطيع الوصول الى الوصفات الطبية التي لا تخصك ..',
+                'appointment_patient_id'=>$appointment->patient_id,
+                'user_id'=>$user->id
+                ]);
         }
         $medications = $appointment->medications;
         $lab_tests = $appointment->labTests;
@@ -263,24 +271,36 @@ class DoctorController extends Controller
 
     public function updatePrescription(Request $request,string $id)
     {
-
+        $request->validate(['is_prescription_viewed'=>'required|boolean']);
         $appointment = Appointment::find($id);
         if (!$appointment) {
             return response()->json(['message' => 'الموعد غير موجود'], 404);
         }
 
-        $user=Auth::user();
-        if ($appointment->patient_id != $user->id){
-            return response()->json(['message'=> 'هذه الوصفة الطبية والتقييم ليس لك ']);
-        }
-
-        $request->validate(['is_prescription_viewed'=>'required|boolean']);
         $appointment->is_prescription_viewed=$request->input('is_prescription_viewed');
         $appointment->save();
         return response()->json(['is_prescription_viewed'=>$appointment->is_prescription_viewed]);
 
     }
 
+    public function getTop5Doctors()
+    {
+        $doctors=Doctor::with('employee')
+            ->orderByDesc('final_rating')
+            ->limit(5)
+            ->get();
+
+        return HomeResource::collection($doctors);
+    }
+
+    public function getDoctorProfile($id)
+    {
+        $doctor=Doctor::with('employee.time','department','qualifications')->find($id);
+        if (!$doctor) {
+            return  response()->json(['doctor not found.']);
+        }
+        return new DoctorResource($doctor);
+    }
 
 
 

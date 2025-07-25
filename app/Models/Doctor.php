@@ -72,6 +72,10 @@ class Doctor extends Model
         return $this->belongsToMany(AvailableSlot::class);
     }
 
+    public function qualifications()
+    {
+        return $this->hasMany(Qualification::class);
+    }
 
 
 

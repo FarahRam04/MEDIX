@@ -57,7 +57,6 @@ class EmployeeSeeder extends Seeder
                     'employee_id' => $doctor->id,
                     'department_id' => $departmentId,
                     'certificate' => "Certificate $doctorIndex",
-                    'qualifications' => "Qualification $doctorIndex",
                     'years_of_experience' => $years_of_experience,
                     'medical_license_number' => "MLN-1000$doctorIndex",
                     'image' => "doctors/doctor$doctorIndex.png",

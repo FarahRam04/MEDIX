@@ -41,7 +41,10 @@ Route::get('/doctors/{id}',[DoctorController::class, 'show']);///////////this ne
 Route::get('/appointments/{id}/can_cancel',[AppointmentController::class, 'canCancelAppointment']);
 Route::get('/appointments/{id}',[AppointmentController::class, 'show']);//get an appointment details
 
-
+Route::put('/prescription/{id}',[DoctorController::class, 'updatePrescription']);
+Route::get('/most_rated_doctors',[DoctorController::class, 'getMostRatedDoctors']);
+Route::get('/top5',[DoctorController::class, 'getTop5Doctors']);
+Route::get('/doctors/{id}/profile',[DoctorController::class, 'getDoctorProfile']);
 
 //routes only for users
 Route::middleware(['auth:sanctum','is_user'])->group(function () {
@@ -52,7 +55,6 @@ Route::middleware(['auth:sanctum','is_user'])->group(function () {
     Route::get('/patient/appointments',[AppointmentController::class, 'getPatientAppointments']);
     Route::delete('/appointments/{id}',[AppointmentController::class, 'destroy']);
     Route::get('/prescription/{id}',[DoctorController::class, 'getPrescription']);
-    Route::put('/prescription/{id}',[DoctorController::class, 'updatePrescription']);
     Route::post('/doctors/rate',[DoctorController::class, 'rate']);
 
 

@@ -22,5 +22,6 @@ class DatabaseSeeder extends Seeder
         $this->call([UserSeeder::class]);
         $this->call([EmployeeSeeder::class]);
         $this->call([AppointmentSeeder::class]);
+        $this->call([QualificationSeeder::class]);
     }
 }
