@@ -21,3 +21,4 @@ class QualificationSeeder extends Seeder
         }
     }
 }
+
