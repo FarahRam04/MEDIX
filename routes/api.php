@@ -1,5 +1,5 @@
 <?php
-
+//////hello medix
 use App\Http\Controllers\Api\CodeCheckEmailController;
 use App\Http\Controllers\Api\CodeCheckWhatsappController;
 use App\Http\Controllers\Api\ForgetPasswordWhatsappController;
@@ -103,6 +103,7 @@ Route::middleware(['auth:sanctum','is_employee'])->group(function () {
 Route::middleware(['auth:sanctum','is_doctor'])->group(function () {
     Route::post('/update_profile',[DoctorController::class, 'update']);
     Route::post('/prescription/{id}',[DoctorController::class, 'writePrescription']);
+
 
 });
 
