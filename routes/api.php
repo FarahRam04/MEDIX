@@ -1,5 +1,5 @@
 <?php
-//////hello medix
+
 use App\Http\Controllers\Api\CodeCheckEmailController;
 use App\Http\Controllers\Api\CodeCheckWhatsappController;
 use App\Http\Controllers\Api\ForgetPasswordWhatsappController;
