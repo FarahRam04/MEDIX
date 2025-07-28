@@ -24,7 +24,7 @@ class UpdateDoctorProfileRequest extends FormRequest
         return [
             'department_id' => 'nullable|exists:departments,id',
             'certificate'=>'nullable|string',
-            'qualifications'=>'nullable|string',
+            //'qualifications'=>'nullable|string',
             'years_of_experience'=>'nullable|numeric',
             'image'=>'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'bio'=>'required|string',

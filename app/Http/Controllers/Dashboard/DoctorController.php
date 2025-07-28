@@ -60,7 +60,7 @@ class DoctorController extends Controller
         $department_id = $request->input('department_id', $doctor->department_id);
         $doctor->department_id = $department_id;
         $doctor->certificate = $request->input('certificate', $doctor->certificate);
-        $doctor->qualifications = $request->input('qualifications', $doctor->qualifications);
+        //$doctor->qualifications = $request->input('qualifications', $doctor->qualifications);
         $doctor->bio=$request->input('bio', $doctor->bio);
         $doctor->medical_license_number=$request->input('medical_license_number', $doctor->medical_license_number);
         $years_of_experience=$request->input('years_of_experience', $doctor->years_of_experience);
