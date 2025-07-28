@@ -13,33 +13,36 @@ class SendAppointmentReminders extends Command
 
     public function handle()
     {
+        // احسب الوقت بعد 24 ساعة من الآن (دقيقة دقيقة)
+        $targetDateTime = now()->addDay(); // الآن + 24 ساعة
+        $targetDate = $targetDateTime->toDateString();
+        $targetTime = $targetDateTime->format('H:i:s'); // وقت الموعد بالضبط
+
+        // جلب كل المواعيد التي تحدث بالضبط بعد 24 ساعة
         $appointments = Appointment::with(['slot', 'patient.user'])
-            ->whereDate('date', now()->addDay()->toDateString())
+            ->whereDate('date', $targetDate)          // مواعيد الغد
+            ->whereRelation('slot', 'start_time', $targetTime)
             ->where('status', 'pending')
             ->get();
 
         if ($appointments->isEmpty()) {
-            $this->info(" NO APPOINTMENTS TOMORROW");
+            $this->info("⚠ لا يوجد مواعيد بعد 24 ساعة من الآن.");
             return;
         }
+
         foreach ($appointments as $appointment) {
-            //جلب المستخدم متعلق بالحجز
-            $user = $appointment->patient->user;
-
-
-            if (!$user || !$user->fcm_token) continue;//تجاهل ما تبقى من حلقة عند تنقيذ الشرط
-
-            $appointmentTime = $appointment->date . ' ' . $appointment->slot->start_time;
+            $user = $appointment->patient->user ?? null;
+            if (!$user || !$user->fcm_token) continue;
 
             $title = "تذكير بموعدك في العيادة";
-            $body = "لديك موعد غدًا في تمام الساعة " . date('H:i', strtotime($appointment->slot->start_time));
+            $body = "موعدك غدًا الساعة " . $appointment->slot->start_time;
 
-            // إرسال الإشعار
             app(NotificationService::class)->sendFCMNotification($user->fcm_token, $title, $body);
-            $this->info(" إشعار أُرسل إلى المستخدم: {$user->first_name} (ID: {$user->id}) في {$appointmentTime}");
 
+            $this->info("send {$user->first_name} to {$appointment->slot->start_time}");
         }
 
-        $this->info(" تم ارسال جميع الاشعارات بنجاح");
+        $this->info("done!");
     }
+
 }

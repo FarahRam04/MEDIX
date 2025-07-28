@@ -14,6 +14,7 @@ use App\Http\Controllers\Dashboard\DoctorController;
 use App\Http\Controllers\Dashboard\EmployeeController;
 use App\Http\Controllers\Dashboard\TimeController;
 use App\Http\Controllers\EmailController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\User\PatientController;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\User\UserControllerAuth;
@@ -56,6 +57,9 @@ Route::middleware(['auth:sanctum','is_user'])->group(function () {
     Route::delete('/appointments/{id}',[AppointmentController::class, 'destroy']);
     Route::get('/prescription/{id}',[DoctorController::class, 'getPrescription']);
     Route::post('/doctors/rate',[DoctorController::class, 'rate']);
+    Route::get('/notifications/unread', [NotificationController::class, 'unread']);
+    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+
 
 
 });

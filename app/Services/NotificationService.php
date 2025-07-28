@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Notification;
 use App\Models\User;
 use Google\Client;
 use Illuminate\Http\Request;
@@ -69,6 +70,20 @@ class NotificationService
             }
         }
 
+        $user = User::where('fcm_token', $token)->first();
+        if ($user) {
+            Notification::create([
+                'user_id' => $user->id,
+                'title' => $title,
+                'body' => $body,
+                'data' => ['extra' => $body],
+                'is_read' => false,
+
+            ]);
+        }
+
+
+
         return $response;
     }
 
@@ -79,6 +94,7 @@ class NotificationService
             'fcm_token' => 'required|string',
             'title' => 'required|string',
             'body' => 'required|string',
+
         ]);
 
         $response = $this->sendFCMNotification(

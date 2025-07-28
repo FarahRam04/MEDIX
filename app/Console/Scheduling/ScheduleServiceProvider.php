@@ -10,8 +10,9 @@ class ScheduleServiceProvider extends ServiceProvider
 {
     public function boot(Schedule $schedule): void
     {
-        // أمر التذكير بالمواعيد كل ساعة
-        $schedule->command('reminders:appointments')->hourly();
+        $schedule->command('reminders:appointments')
+            ->everyThirtyMinutes()
+            ->between('09:00', '21:00');
 
     }
 }
