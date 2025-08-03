@@ -7,6 +7,7 @@ use App\Http\Resources\HomeResource;
 use App\Models\Advice;
 use App\Models\Appointment;
 use App\Models\LabTest;
+use App\Models\Qualification;
 use App\Models\Surgery;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -60,7 +61,17 @@ class DoctorController extends Controller
         $department_id = $request->input('department_id', $doctor->department_id);
         $doctor->department_id = $department_id;
         $doctor->certificate = $request->input('certificate', $doctor->certificate);
-        //$doctor->qualifications = $request->input('qualifications', $doctor->qualifications);
+        if ($request->input('qualifications')) {
+            $existingQualifications = $doctor->qualifications->pluck('name')->toArray();
+
+            foreach ($request->qualifications as $name) {
+                if (!in_array($name, $existingQualifications)) {
+                    $doctor->qualifications()->create(['name' => $name]);
+                    $existingQualifications[] = $name; // تحديث القائمة لتجنب التكرار داخل نفس الطلب
+                }
+            }
+        }
+
         $doctor->bio=$request->input('bio', $doctor->bio);
         $doctor->medical_license_number=$request->input('medical_license_number', $doctor->medical_license_number);
         $years_of_experience=$request->input('years_of_experience', $doctor->years_of_experience);
@@ -94,7 +105,7 @@ class DoctorController extends Controller
         $doctor->final_rating = $doctor->initial_rating;
         $doctor->save();
 
-        return response()->json(['message' => 'Profile updated successfully.', 'doctor' => $doctor->load('department','employee')], 200);
+        return response()->json(['message' => 'Profile updated successfully.', 'doctor' => $doctor->load('department','employee','qualifications')], 200);
 
     }
     // إضافة تقييم جديد لدكتور

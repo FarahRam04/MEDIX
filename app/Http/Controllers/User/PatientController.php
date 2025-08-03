@@ -313,7 +313,7 @@ class PatientController extends Controller
                 'department_id'       => $department_id,
                 'date'                => $request->date,
                 'slot_id'             => $request->slot_id,
-                'type'                => $request->type === 1?'check_up':'follow_up',
+                'type'                => $request->request_type_id === 1?'check_up':'follow_up',
                 'with_medical_report' => $request->with_medical_report ?? false,
                 'specialization'      => $specialization
             ]);
