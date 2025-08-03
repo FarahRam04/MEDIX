@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Notification extends Model
 {
-    protected $fillable = ['user_id', 'title','body', 'data',];
+    protected $guarded= [];
+
     protected $casts = [
-        'data' => 'array',    // يخزن JSON كـ array
-        'read_at' => 'datetime'
+        'sent_at' => 'datetime',
+        'is_read' => 'boolean',
+        'is_sent' => 'boolean',
     ];
 
     // ربط الإشعار بالمستخدم

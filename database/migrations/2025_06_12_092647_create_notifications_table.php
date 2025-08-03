@@ -16,8 +16,10 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained('users')->cascadeOnDelete();
             $table->string('title');
             $table->text('body');
+            $table->string('type');
             $table->boolean('is_sent')->default(false);
             $table->timestamp('sent_at')->nullable();
+            $table->boolean('is_read')->default(false); // هل تمت قراءة الإشعار
             $table->timestamps();
         });
     }

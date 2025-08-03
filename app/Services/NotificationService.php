@@ -17,7 +17,7 @@ class NotificationService
     {
         //
     }
-    public function sendFCMNotification(string $token, string $title, string $body)
+    public function sendFCMNotification(string $token, string $title, string $body,string $type)
     {
         // تحقق من صحة التوكين (مثلاً ألا يكون فارغ أو قصير جداً)
         if (!$token || strlen($token) < 10) {
@@ -76,8 +76,10 @@ class NotificationService
                 'user_id' => $user->id,
                 'title' => $title,
                 'body' => $body,
-                'data' => ['extra' => $body],
+                'type' => $type,
                 'is_read' => false,
+                'is_sent' => $response->successful(),
+                'sent_at' => now(),
 
             ]);
         }
@@ -94,13 +96,16 @@ class NotificationService
             'fcm_token' => 'required|string',
             'title' => 'required|string',
             'body' => 'required|string',
+            'type' => 'nullable|in:reminders,prescription,report', // نوع الإشعار
+
 
         ]);
 
         $response = $this->sendFCMNotification(
             $validated['fcm_token'],
             $validated['title'],
-            $validated['body']
+            $validated['body'],
+            $validated['type']
         );
 
         if ($response && $response->successful()) {

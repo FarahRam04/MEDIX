@@ -18,10 +18,15 @@ class SendAppointmentReminders extends Command
         $targetDate = $targetDateTime->toDateString();
         $targetTime = $targetDateTime->format('H:i:s'); // وقت الموعد بالضبط
 
+// حساب مجال زمني ±5 دقائق
+        $fromTime = $targetDateTime->copy()->subMinutes(5)->format('H:i:s');
+        $toTime = $targetDateTime->copy()->addMinutes(5)->format('H:i:s');
+
         // جلب كل المواعيد التي تحدث بالضبط بعد 24 ساعة
         $appointments = Appointment::with(['slot', 'patient.user'])
             ->whereDate('date', $targetDate)          // مواعيد الغد
-            ->whereRelation('slot', 'start_time', $targetTime)
+            ->whereRelation('slot','start_time', '>=', $fromTime)
+            ->whereRelation('slot','start_time', '<=', $toTime)
             ->where('status', 'pending')
             ->get();
 
@@ -35,14 +40,17 @@ class SendAppointmentReminders extends Command
             if (!$user || !$user->fcm_token) continue;
 
             $title = "تذكير بموعدك في العيادة";
-            $body = "موعدك غدًا الساعة " . $appointment->slot->start_time;
+            $time = \Carbon\Carbon::parse($appointment->slot->start_time)->format('h:i A');
+            $body = "موعدك غدًا الساعة " . $time;
+            $type = $type = 'reminders';
 
-            app(NotificationService::class)->sendFCMNotification($user->fcm_token, $title, $body);
+
+            app(NotificationService::class)->sendFCMNotification($user->fcm_token, $title, $body,$type);
 
             $this->info("send {$user->first_name} to {$appointment->slot->start_time}");
         }
 
-        $this->info("done!");
+        $this->info("send all notification!");
     }
 
 }

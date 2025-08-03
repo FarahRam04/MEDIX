@@ -57,7 +57,7 @@ Route::middleware(['auth:sanctum','is_user'])->group(function () {
     Route::delete('/appointments/{id}',[AppointmentController::class, 'destroy']);
     Route::get('/prescription/{id}',[DoctorController::class, 'getPrescription']);
     Route::post('/doctors/rate',[DoctorController::class, 'rate']);
-    Route::get('/notifications/unread', [NotificationController::class, 'unread']);
+    Route::get('/notifications', [NotificationController::class, 'index']);
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
 
 

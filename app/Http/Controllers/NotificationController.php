@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\NotificationResource;
 use Illuminate\Http\Request;
 use App\Models\Notification;
 
@@ -12,22 +13,20 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-        $notifications = Notification::where('user_id', $user->id)
+        $unread = Notification::where('user_id', $user->id)
+            ->where('is_read', false)
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return response()->json($notifications);
-    }
-    public function unread(Request $request)
-    {
-        $user = $request->user();
-
-        $notifications = Notification::where('user_id', $user->id)
-            ->where('is_read', false) // فقط غير المقروءة
+        $read = Notification::where('user_id', $user->id)
+            ->where('is_read', true)
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return response()->json($notifications);
+        return response()->json([
+            'Unread Notifications' => NotificationResource::collection($unread),
+            'Read Notifications'   => NotificationResource::collection($read),
+        ]);
     }
     //لما يفتح مستخدم اشعار
     public function markAsRead($id)

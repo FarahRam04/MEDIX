@@ -16,6 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withProviders([
+        App\Console\Scheduling\ScheduleServiceProvider::class,
+    ])
+
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'is_admin'=> EnsureUserIsAdmin::class,
@@ -29,4 +33,5 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
+
     })->create();
