@@ -24,9 +24,9 @@ class WorkingDetailsRequest extends FormRequest
         return [
             'employee_id' => 'required|exists:employees,id|unique:times,employee_id',
             'start_time' => 'required|date_format:g:i A',
-            'end_time' => 'required|date_format:g:i A',
-            'days' => 'required|array',
-            'days.*' => 'string'  // أسماء الأيام
+            'end_time' => 'required|date_format:g:i A|after:start_time',
+            'days' => 'required|array|min:1',
+            'days.*' => 'string|in:Saturday,Sunday,Monday,Tuesday,Wednesday,Thursday,Friday'
         ];
     }
 }

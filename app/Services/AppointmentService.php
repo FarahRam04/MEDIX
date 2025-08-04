@@ -3,20 +3,19 @@
 namespace App\Services;
 
 use App\Models\Appointment;
+use App\Models\AvailableSlot;
 use Carbon\Carbon;
 
 class AppointmentService
 {
-    /**
-     * Determine if the appointment can be cancelled.
-     * The appointment can be cancelled only if:
-     * - Its date is strictly after today
-     */
     public function canBeCancelled(Appointment $appointment): bool
     {
-        $appointmentDate = Carbon::parse($appointment->date)->toDateString();
-        $today = Carbon::now()->toDateString();
+        $slotTime = AvailableSlot::find($appointment->slot_id)?->start_time;
+        if (!$slotTime) {
+            return false;
+        }
+        $appointmentDateTime = Carbon::parse($appointment->date . ' ' . $slotTime);
 
-        return $appointmentDate > $today;
+        return Carbon::now()->diffInHours($appointmentDateTime, false) > 24;
     }
 }

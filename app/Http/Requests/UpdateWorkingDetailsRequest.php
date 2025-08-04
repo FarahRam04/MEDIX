@@ -23,9 +23,9 @@ class UpdateWorkingDetailsRequest extends FormRequest
     {
         return [
             'start_time' => 'sometimes|date_format:g:i A',
-            'end_time' => 'sometimes|date_format:g:i A',
-            'days' => 'sometimes|array',
-            'days.*' => 'string'  // أسماء الأيام
+            'end_time' => 'sometimes|date_format:g:i A|after:start_time',
+            'days' => 'sometimes|array|min:1',
+            'days.*' => 'required_with:days|string|in:Saturday,Sunday,Monday,Tuesday,Wednesday,Thursday,Friday'
         ];
     }
 }
