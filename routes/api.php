@@ -71,6 +71,7 @@ Route::post('/logout', [AdminAndEmployeeAuth::class, 'logout'])->middleware('aut
 
 //routs only for admins
 Route::middleware(['auth:sanctum','is_admin'])->group(function () {
+
     Route::controller(EmployeeController::class)->group(function () {
         Route::get('/employees', 'index');
         Route::post('/add_employee', 'store');
@@ -79,20 +80,25 @@ Route::middleware(['auth:sanctum','is_admin'])->group(function () {
         Route::delete('/employee/destroy/{id}', 'destroy');
     });
 
+    Route::controller(TimeController::class)->group(function (){
+        Route::get('/working_details', 'index');
+        Route::post('/working_details', 'store');
+        Route::put('/working_details/{id}','update');
+        Route::delete('/working_details/{id}/delete', 'destroy');
+        Route::get('/working_details/{id}/show', 'show');
+    });
+
+    Route::controller(DepartmentController::class)->group(function (){
+        Route::get('/departments/doctors', 'index');//get all departments with doctors
+        Route::post('/departments/create', 'store');//add a department
+        Route::put('/departments/{id}', 'update');
+        Route::delete('/departments/{id}', 'destroy');//delete a department
+        Route::get('/departments/{id}/show', 'show');
+    });
+
     Route::get('/users',[UserController::class, 'index']);//get all users
     Route::get('/doctors',[DoctorController::class, 'index']);//get all doctors with all relationships
 
-
-    Route::get('/departments/doctors',[DepartmentController::class, 'index']);//get all departments with doctors
-    Route::post('/departments/create',[DepartmentController::class, 'store']);//add a department
-    Route::put('/departments/{id}',[DepartmentController::class, 'update']);
-    Route::delete('/departments/{id}',[DepartmentController::class, 'destroy']);//delete a department
-
-    Route::get('/working_details',[TimeController::class, 'index']);
-    Route::post('/working_details',[TimeController::class, 'store']);
-    Route::put('/working_details/{id}',[TimeController::class, 'update']);
-    Route::delete('/working_details/{id}/delete',[TimeController::class, 'destroy']);
-    Route::get('/working_details/{id}/show',[TimeController::class, 'show']);
 
 });
 

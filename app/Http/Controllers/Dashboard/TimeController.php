@@ -23,9 +23,7 @@ class TimeController extends Controller
      */
     public function index()
     {
-        if (auth()->user()->role !== 'admin') {
-            return response()->json(['error' => 'Unauthorized. Only admin can manage working times.'], 403);
-        }
+
         return TimeResource::collection(Time::with('days','employee')->get());
     }
 
@@ -34,10 +32,6 @@ class TimeController extends Controller
      */
     public function store(WorkingDetailsRequest $request)
     {
-        if (auth()->user()->role !== 'admin') {
-            return response()->json(['error' => 'Unauthorized. Only admin can manage working times.'], 403);
-        }
-
         $validated = $request->validated();
 
         $result = $this->validateShiftAndConflict($validated);
@@ -73,9 +67,6 @@ class TimeController extends Controller
      */
     public function show(string $id)
     {
-        if (auth()->user()->role !== 'admin') {
-            return response()->json(['error' => 'Unauthorized. Only admin can manage working times.'], 403);
-        }
         $time = Time::find($id);
         if (!$time) {
             return response()->json(['error' => 'Time  not found.'], 404);
@@ -97,9 +88,6 @@ class TimeController extends Controller
 
     public function update(UpdateWorkingDetailsRequest $request, $id)
     {
-        if (auth()->user()->role !== 'admin') {
-            return response()->json(['error' => 'Unauthorized. Only admin can manage working times.'], 403);
-        }
         $time = Time::find($id);
         if (!$time) {
             return response()->json(['error' => 'Time  not found.'], 404);

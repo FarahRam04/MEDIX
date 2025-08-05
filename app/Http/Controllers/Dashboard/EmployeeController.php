@@ -21,7 +21,7 @@ class EmployeeController extends Controller
 
         return response()->json([
             'employees' => $employees
-        ]);
+        ],200);
     }
 
     /**
@@ -59,7 +59,7 @@ System Administration", function ($message) use ($request, $fullName) {
         return response()->json([
             'message' => 'Employee added successfully,and login details sent via email.',
             'role' => $employee->getRoleNames()->first(),
-        ]);
+        ],200);
     }
 
     /**
@@ -70,7 +70,7 @@ System Administration", function ($message) use ($request, $fullName) {
 
         return response()->json([
             'employee' => $employee
-        ]);
+        ],200);
     }
 
     /**
@@ -78,7 +78,10 @@ System Administration", function ($message) use ($request, $fullName) {
      */
     public function update(UpdateEmployeeRequest $request,  $id)
     {
-        $employee=Employee::query()->findOrFail($id);
+        $employee = Employee::find($id);
+        if (!$employee) {
+            return response()->json(['error' => 'Employee not found'], 404);
+        }
         $employee->update($request->validated());
 
         if ($request->has('role')) {
@@ -88,7 +91,7 @@ System Administration", function ($message) use ($request, $fullName) {
         return response()->json([
             'message' => 'Employee updated successfully',
             'employee' => $employee,
-        ]);
+        ],200);
     }
 
     /**
@@ -111,6 +114,6 @@ System Administration", function ($message) use ($request, $fullName) {
         return response()->json([
             'message' => 'Employee and related time deleted successfully.',
             'employee'=> $employee
-            ]);
+            ],200);
     }
 }
