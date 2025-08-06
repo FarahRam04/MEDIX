@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('first_name');
             $table->string('last_name');
+            $table->unsignedInteger('points')->default(50);
             $table->string('gender');
             $table->date('birth_date');
             $table->string('phone_number');

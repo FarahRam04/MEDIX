@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
+use App\Models\Offer;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -49,6 +50,16 @@ class UserController extends Controller
     {
 
     }
+
+    public function getPoints()
+    {
+        $user = auth()->user();
+        return response()->json([
+            'points' => $user->points,
+        ], 200);
+    }
+
+
 
 
 

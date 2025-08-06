@@ -15,6 +15,7 @@ use App\Http\Controllers\Dashboard\EmployeeController;
 use App\Http\Controllers\Dashboard\TimeController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\User\OfferController;
 use App\Http\Controllers\User\PatientController;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\User\UserControllerAuth;
@@ -32,6 +33,9 @@ Route::get('/user', function (Request $request) {
 Route::post('/user_register',[UserControllerAuth::class,'register']);
 Route::post('/user_login',[UserControllerAuth::class,'login']);
 
+Route::get('/offers',[OfferController::class,'offers']);
+Route::get('/offer/{id}',[BookingPage::class,'offerDays']);
+Route::get('/offer_price',[OfferController::class,'offerPrice']);
 
 Route::get('/departments',[BookingPage::class, 'departments']);//get all departments
 Route::get('/default_days',[BookingPage::class, 'getNextFiveDays']);//get default days
@@ -59,6 +63,7 @@ Route::middleware(['auth:sanctum','is_user'])->group(function () {
     Route::post('/doctors/rate',[DoctorController::class, 'rate']);
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::get('/points',[UserController::class, 'getPoints']);
 
 
 

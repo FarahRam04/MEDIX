@@ -21,16 +21,17 @@ return new class extends Migration
             $table->date('date'); // تاريخ الحجز
             $table->foreignId('slot_id')->constrained('available_slots')->onDelete('cascade'); // وقت الحجز الثابت
 
-            $table->enum('type', ['check_up', 'follow_up']);
             $table->string('specialization');
             $table->enum('status', ['pending', 'completed'])->default('pending');
 
-            $table->unsignedBigInteger('check_up_price')->default(50000);
-            $table->boolean('lab_tests')->default(false);
+            //$table->unsignedBigInteger('check_up_price')->default(50000);
+            //$table->boolean('lab_tests')->default(false);
+            $table->enum('type', ['check_up', 'follow_up']);
+            $table->boolean('with_medical_report')->default(false);
             $table->unsignedBigInteger('total_price')->nullable();
             $table->boolean('payment_status')->default(false);
 
-            $table->boolean('with_medical_report')->default(false);
+
             $table->boolean('is_prescription_viewed')->default(false);
             $table->boolean('is_rated')->default(false);
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AvailableSlot;
 use App\Models\Department;
+use App\Models\Offer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -50,6 +51,28 @@ class BookingPage extends Controller
         });
 
         return response()->json($result);
+    }
+    public function offerDays($offerId)
+    {
+        $offer = Offer::find($offerId);
+
+        if (!$offer) {
+            return response()->json(['error' => 'Offer not found'], 404);
+        }
+
+        $start = Carbon::parse($offer->start_date)->startOfDay();
+        $end = Carbon::parse($offer->end_date)->startOfDay();
+
+        // استدعاء التابع السابق
+        $response = $this->getNextFiveDays();
+        $days=$response->getData(true);
+        // تعديل isAvailable إذا ضمن المدى
+        foreach ($days as &$day) {//& للتعديل على المصفوفة الاصلية
+            $date = Carbon::parse($day['day'])->startOfDay();
+            $day['isAvailable'] = $date->between($start, $end);
+        }
+
+        return response()->json($days);
     }
 
     public function getDepartmentAvailability($department_id)
