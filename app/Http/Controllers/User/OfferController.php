@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\User;
 
+use App\HelperFunctions;
 use App\Http\Controllers\Controller;
 use App\Models\Offer;
 use Illuminate\Http\Request;
 
 class OfferController extends Controller
 {
+    use HelperFunctions;
     public function offers()
     {
         $offers = Offer::all();
@@ -20,39 +22,27 @@ class OfferController extends Controller
         return response()->json($offers, 200);
     }
 
+
     public function offerPrice(Request $request){
         $request->validate([
             'offer_id' => 'required|exists:offers,id',
-            'selected_service.request_type_id' => 'required|in:1,2',
-            'selected_service.with_medical_report' => 'required|boolean',
+            'selected_service.request_type_id' => 'nullable|in:1,2',
+            'selected_service.with_medical_report' => 'nullable|boolean',
         ]);
         $offer = Offer::findOrFail($request->offer_id);
 
-        // السعر الأساسي حسب نوع الطلب
-        if ($request->selected_service['request_type_id'] == 1) {
-            $basePrice = 50000;
-        } elseif ($request->selected_service['request_type_id'] == 2) {
-            $basePrice = 25000;
-        } else {
-            return response()->json(['error' => 'نوع الطلب غير صالح','request_type_id'=>$request->request_type_id], 400);
+        $finalPrice=0;
+        $offerPoints=0;
+        if ($offer->payment_method === 'cash') {
+            $finalPrice=$this->getTotalOfferPrice($offer->id,$request->selected_service['request_type_id'],$request->selected_service['with_medical_report']);
         }
-
-        // إذا كان بدو تقرير طبي أضف 20 ألف
-        if ($request->selected_service['with_medical_report']) {
-            $basePrice += 20000;
-        }
-
-        // تطبق الخصم إذا العرض نوعه cash
-        if ($offer->payment_method === 'cash' && $offer->discount_cash) {
-            $discount = $basePrice * ($offer->discount_cash  / 100);
-            $finalPrice = $basePrice - $discount;
-        } else {
-            $finalPrice = $basePrice;
+        elseif($offer->payment_method === 'points') {
+            $offerPoints=$offer->points_required;
         }
 
         return response()->json([
-            'price' => round($finalPrice),
-            'currency' => 'SYP',
+            'price' =>$finalPrice=== 0? $offerPoints:round($finalPrice),
+            'currency' => $finalPrice===0 ?'Points' :'SYP',
         ]);
     }
 

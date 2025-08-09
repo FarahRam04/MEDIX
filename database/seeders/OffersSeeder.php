@@ -15,7 +15,7 @@ class OffersSeeder extends Seeder
         $doctors = Doctor::with('department', 'employee')->get();
         $paymentMethods = ['cash', 'points'];
 
-        for ($i = 0; $i < 15; $i++) {
+        for ($i = 0; $i < 4; $i++) {
             $doctor = $doctors->random();
 
             // جلب التايم المرتبط بالدكتور
@@ -46,7 +46,7 @@ class OffersSeeder extends Seeder
             $pointsRequired = $paymentMethod === 'points' ? rand(35, 70) : null;
 
             Offer::create([
-                'image' => 'storage/offers/offer' . rand(1, 15) . '.jpg',
+                'image' => 'storage/offers/offer' .$i+1 . '.jpg',
                 'department_id' => $doctor->department_id,
                 'doctor_id' => $doctor->id,
                 'shift' => $shift,

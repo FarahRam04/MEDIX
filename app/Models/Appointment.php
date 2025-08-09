@@ -44,4 +44,9 @@ class Appointment extends Model
     {
         return $this->hasMany(Advice::class);
     }
+
+    public function offer()
+    {
+        return $this->belongsTo(Offer::class);
+    }
 }

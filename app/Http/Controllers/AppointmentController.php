@@ -15,15 +15,17 @@ class AppointmentController extends Controller
     {
         // تحقق من أن المستخدم الحالي هو مريض
         $user = auth()->user();
-        if (!$user || !$user->patient) {
-            return response()->json(['message' => 'Unauthorized or not a patient'], 403);
+        $request->validate([
+            'status'=>'required|in:pending,completed'
+        ]);
+        $status = $request->query('status');
+
+        if (!$user->patient) {
+            return response()->json([], 200);
         }
 
         // جلب المريض المرتبط بالمستخدم
         $patient = $user->patient;
-
-        // جلب الحالة من query (?status=completed or pending)
-        $status = $request->query('status', 'completed'); // الافتراضي completed
 
         // جلب المواعيد من جدول appointments
         $appointments = Appointment::with(['doctor.employee.user', 'slot'])

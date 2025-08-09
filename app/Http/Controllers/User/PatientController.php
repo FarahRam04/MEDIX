@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\User;
 
+use App\HelperFunctions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BookAppointmentRequest;
 use App\Models\Appointment;
 use App\Models\AvailableSlot;
 use App\Models\Doctor;
+use App\Models\Offer;
 use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -17,6 +19,7 @@ use Carbon\Carbon;
 
 class PatientController extends Controller
 {
+    use HelperFunctions;
     /**
      * Display a listing of the resource.
      */
@@ -120,6 +123,33 @@ class PatientController extends Controller
             // 8. قفل الـ slot للحجز الآمن
             $slot = AvailableSlot::lockForUpdate()->findOrFail($request->slot_id);
 
+
+            if ($request->input('offer_id')){
+                $offer = Offer::findOrFail($request->offer_id);
+                if ($offer->payment_method === 'cash') {
+                    $finalPrice=$this->getTotalOfferPrice($offer->id,$request->request_type_id,$request->with_medical_report);
+                }
+                elseif ($offer->payment_method === 'points') {
+                    if ($user->points < $offer->points_required){
+                        throw ValidationException::withMessages([
+                            'points' => 'Sorry, you do not have enough points to book this appointment.',
+                        ]);
+                    } else {
+                        $finalPrice = 0;
+                        $user->points -= $offer->points_required;
+                        $user->save();
+                    }
+                }
+            }
+            $priceWithoutOffer=0;
+            if ($request->request_type_id === 1){
+                $priceWithoutOffer=50000;
+            }elseif ($request->request_type_id === 2){
+                $priceWithoutOffer=25000;
+            }
+            if ($request->with_medical_report){
+                $priceWithoutOffer+=20000;
+            }
             // 9. إنشاء الموعد
             $appointment = Appointment::create([
                 'doctor_id'           => $request->doctor_id,
@@ -129,7 +159,8 @@ class PatientController extends Controller
                 'slot_id'             => $request->slot_id,
                 'type'                => $request->request_type_id ===1 ?'check_up' : 'follow_up',
                 'with_medical_report' => $request->with_medical_report ?? false,
-                'specialization'      => $specialization
+                'specialization'      => $specialization,
+                'total_price'         => $finalPrice ?? $priceWithoutOffer,
             ]);
         });
 

@@ -13,12 +13,19 @@ class   BookAppointmentRequest extends FormRequest
     {
         return true;
     }
+    protected function prepareForValidation()
+    {
+        if ($this->has('reservation')) {
+            $this->merge($this->input('reservation'));
+        }
+    }
 
     /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
+
     public function rules(): array
     {
         return [
@@ -28,6 +35,7 @@ class   BookAppointmentRequest extends FormRequest
             'date'            => 'required|date|after_or_equal:today',
             'slot_id'         => 'required|exists:available_slots,id',
             'with_medical_report'=>'boolean',
+            'offer_id'        =>'nullable|exists:offers,id',
         ];
     }
 }
