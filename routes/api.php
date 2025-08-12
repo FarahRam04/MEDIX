@@ -13,6 +13,7 @@ use App\Http\Controllers\Dashboard\DepartmentController;
 use App\Http\Controllers\Dashboard\DoctorController;
 use App\Http\Controllers\Dashboard\EmployeeController;
 use App\Http\Controllers\Dashboard\TimeController;
+use App\Http\Controllers\Dashboard\VacationController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\User\OfferController;
@@ -64,6 +65,8 @@ Route::middleware(['auth:sanctum','is_user'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::get('/points',[UserController::class, 'getPoints']);
+    Route::post('/refresh_token',[UserControllerAuth::class,'refreshToken']);
+
 
 
 
@@ -100,6 +103,15 @@ Route::middleware(['auth:sanctum','is_admin'])->group(function () {
         Route::delete('/departments/{id}', 'destroy');//delete a department
         Route::get('/departments/{id}/show', 'show');
     });
+
+    Route::controller(VacationController::class)->group(function (){
+        Route::get('/vacations', 'index');
+        Route::post('/vacations/create', 'store');
+        Route::put('/vacations/{id}', 'update');
+        Route::delete('/vacations/{id}/delete', 'destroy');
+        Route::get('/vacations/{id}/show', 'show');
+    });
+
 
     Route::get('/users',[UserController::class, 'index']);//get all users
     Route::get('/doctors',[DoctorController::class, 'index']);//get all doctors with all relationships
@@ -155,9 +167,6 @@ Route::post('password/send/whatsapp',ForgetPasswordWhatsappController::class);
 Route::post('password/code/check/whatsapp', CodeCheckWhatsappController::class);
 Route::post('password/reset/whatsapp', ResetPasswordWhatsappController::class);
 
-//Route::post('/send-notification', [NotificationController::class, 'send']);
+
 Route::post('/refresh_token',[UserControllerAuth::class,'refreshToken'])->middleware('auth:sanctum');
-
-
-//Route::get('/appointments/tomorrow', [\App\Http\Contrller\getAppointmentController::class, 'getTomorrowAppointments']);
 Route::post('/firebase/send', [NotificationService::class, 'send']);
