@@ -110,4 +110,19 @@ class AppointmentController extends Controller
         ]);
     }
 
+    public function testBill($id)
+    {
+        $appointment = Appointment::with('patient.user')->findOrFail($id);
+        return response()->json([
+            'Id'=>$appointment->id,
+            'Status'=>$appointment->payment_status === 0 ? 'Unpaid' : 'paid',
+            'Payment Date'=>Carbon::today()->format('Y-m-d'),
+            'Payment Time'=>Carbon::now()->format('H:i:s'),
+            'Payment Method'=>$appointment->total_price === 0 ?'Points' : 'Cash',
+            'Check_Up Price'=>'50000 SYP',
+            'Medical Report Price'=>$appointment->with_medical_report ? '25000 SYP' : '0 SYP',
+            'Total Price'=>$appointment->total_price,
+        ]);
+    }
+
 }

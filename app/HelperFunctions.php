@@ -23,6 +23,20 @@ trait HelperFunctions
 
     }
 
+    public function getTotalPriceWithoutOffer($request_type_id,bool $with_medical_report)
+    {
+        $basePrice=0;
+        if ($request_type_id===1){
+            $basePrice = 50000;
+        }elseif ($request_type_id==2) {
+            $basePrice = 25000;
+        }
+        if ($with_medical_report){
+            $basePrice+=20000;
+        }
+        return $basePrice;
+    }
+
     public function getSpecialists():array
     {
          return [
