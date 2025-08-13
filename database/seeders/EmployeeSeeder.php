@@ -10,25 +10,29 @@ use App\Models\Doctor;
 use App\Models\Time;
 use Spatie\Permission\Models\Role;
 use Faker\Factory as Faker;
-
+use App\HelperFunctions;
 class EmployeeSeeder extends Seeder
 {
-
+    use HelperFunctions;
     public function run()
     {
-        $departmentSpecialists = [
-            1 => 'General Practitioner',
-            2 => 'Cardiologist',
-            3 => 'Dermatologist',
-            4 => 'Gastroenterologist',
-        ];
+        $departmentSpecialists=$this->getSpecialists();
+
+//        $departmentSpecialists = [
+//            1 => 'General Practitioner',
+//            2 => 'Cardiologist',
+//            3 => 'Dermatologist',
+//            4 => 'Gastroenterologist',
+//            5 => 'neurologist',
+//            6 => 'pediatrician',
+//        ];
 
         $faker = Faker::create();
 
         $doctorRole = Role::firstOrCreate(['name' => 'doctor']);
         $receptionistRole = Role::firstOrCreate(['name' => 'receptionist']);
 
-        $departments = [2, 3, 4];
+        $departments = [2, 3, 4, 5, 6];
 
         $firstThreeDays = [0, 1, 2]; // الأحد، الإثنين، الثلاثاء
         $lastFourDays = [3, 4, 5, 6]; // الأربعاء - السبت
@@ -60,7 +64,6 @@ class EmployeeSeeder extends Seeder
                     'years_of_experience' => $years_of_experience,
                     'medical_license_number' => "MLN-1000$doctorIndex",
                     'image' => "doctors/doctor$doctorIndex.png",
-
                     'specialist' => $specialist,
                     'number_of_treatments' => $faker->numberBetween(0, 100),
                     'bio' => "Dr. $firstName $lastName has over $years_of_experience years of experience in $specialist.",

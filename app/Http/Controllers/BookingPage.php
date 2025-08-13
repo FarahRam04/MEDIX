@@ -12,7 +12,26 @@ use Illuminate\Support\Facades\DB;
 class BookingPage extends Controller
 {
     public function departments(){
-        return response()->json(Department::all());
+        $departments = Department::all();
+        foreach($departments as $department){
+            if ($department->id === 1){
+                continue;
+            }
+            $morningDoctors=0;
+            $afternoonDoctors=0;
+            $doctors=$department->doctors;
+            foreach($doctors as $doctor){
+               $time=$doctor->employee->time;
+               $time->start_time ==='09:00:00' ? $morningDoctors++ : $afternoonDoctors++ ;
+            }
+            $data[]=[
+                'id'=>$department->id,
+                'name'=>$department->name,
+                'morning_Doctors_Count'=>$morningDoctors,
+                'afternoon_Doctors_Count'=>$afternoonDoctors,
+            ];
+        }
+        return response()->json($data);
     }
 
     public function getNextFiveDays()

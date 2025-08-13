@@ -8,9 +8,9 @@ use Carbon\Carbon;
 
 class AppointmentService
 {
-    public function canBeCancelled(Appointment $appointment): bool
+    public function canBeCancelledAndEdited(Appointment $appointment): bool
     {
-        $slotTime = AvailableSlot::find($appointment->slot_id)?->start_time;
+        $slotTime = AvailableSlot::findOrFail($appointment->slot_id)->start_time;
         if (!$slotTime) {
             return false;
         }

@@ -22,4 +22,16 @@ trait HelperFunctions
         return $basePrice - $discount;
 
     }
+
+    public function getSpecialists():array
+    {
+         return [
+            1 => 'General Practitioner',
+            2 => 'Cardiologist',
+            3 => 'Dermatologist',
+            4 => 'Gastroenterologist',
+            5 => 'neurologist',
+            6 => 'pediatrician',
+        ];
+    }
 }

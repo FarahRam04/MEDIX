@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 
 class AppointmentController extends Controller
 {
+
     public function getPatientAppointments(Request $request)
     {
         // تحقق من أن المستخدم الحالي هو مريض
@@ -65,7 +66,7 @@ class AppointmentController extends Controller
     {
         $appointment = Appointment::findOrFail($id);
 
-        if (!$service->canBeCancelled($appointment)) {
+        if (!$service->canBeCancelledAndEdited($appointment)) {
             return response()->json([
                 'can_cancel' => false,
             ], 403);
@@ -88,7 +89,7 @@ class AppointmentController extends Controller
         }
 
         // تحقق من إمكانية الإلغاء (عن طريق الـ Service)
-        if (!$service->canBeCancelled($appointment)) {
+        if (!$service->canBeCancelledAndEdited($appointment)) {
             return response()->json([
                 'can_cancel' => false,
             ], 403);

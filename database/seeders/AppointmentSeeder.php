@@ -6,7 +6,6 @@ use Illuminate\Database\Seeder;
 use App\Models\Patient;
 use App\Models\Doctor;
 use App\Models\Appointment;
-use Illuminate\Support\Facades\DB;
 use Faker\Factory as Faker;
 use Carbon\Carbon;
 
@@ -15,19 +14,20 @@ class AppointmentSeeder extends Seeder
     public function run()
     {
         $faker = Faker::create();
-
         $patients = Patient::all();
-        $doctors = Doctor::with(['department', 'employee'])->get();
+        $doctors = Doctor::with(['department', 'employee.time.days', 'availableSlots'])->get();
 
+        // توليد المواعيد لكل حالة status
+        $this->createAppointments('pending', 40, $patients, $doctors, $faker, true);    // مواعيد حالية/مستقبلية
+        $this->createAppointments('completed', 40, $patients, $doctors, $faker, false); // مواعيد سابقة
+    }
+
+
+    private function createAppointments($status, $maxAppointments, $patients, $doctors, $faker, $futureDates = true)
+    {
         $appointmentsCreated = 0;
-        $maxAppointments = 40;
         $maxAttempts = 1000;
         $attempts = 0;
-
-        // 🟢 المواعيد "الحالية" والمستقبلية (status = pending)
-        $validFutureDates = collect(range(0, 4))
-            ->map(fn($i) => Carbon::today('Asia/Damascus')->addDays($i)->format('Y-m-d'))
-            ->toArray();
 
         while ($appointmentsCreated < $maxAppointments && $attempts < $maxAttempts) {
             $attempts++;
@@ -35,87 +35,57 @@ class AppointmentSeeder extends Seeder
             $patient = $patients->random();
             $doctor = $doctors->random();
 
-            $departmentId = $doctor->department_id;
-            $specialization = $doctor->department->name ?? 'General';
+            $time = $doctor->employee->time;
+            if (!$time) continue; // لا يوجد جدول دوام
 
-            $slotIds = $doctor->availableSlots()->pluck('available_slots.id')->toArray();
-            if (empty($slotIds)) continue;
+            $availableDays = $time->days->pluck('id')->all();
+            if (empty($availableDays)) continue;
 
-            $slotId = $faker->randomElement($slotIds);
-            $date = $faker->randomElement($validFutureDates);
+            // توليد تاريخ ضمن أيام دوام الدكتور
+            $date = null;
+            $dayOfWeek = null;
+            for ($i = 0; $i < 20; $i++) { // محاولة 20 مرة لتوليد تاريخ مناسب
+                $tempDate = $futureDates
+                    ? Carbon::today('Asia/Damascus')->addDays(rand(0, 30))
+                    : Carbon::today('Asia/Damascus')->subDays(rand(1, 30));
 
-            // منع تكرار الموعد للمريض في نفس اليوم والوقت
-            $conflict = Appointment::where('patient_id', $patient->id)
-                ->where('date', $date)
-                ->where('slot_id', $slotId)
+                $tempDay = $tempDate->dayOfWeek;
+                if (in_array($tempDay, $availableDays, true)) {
+                    $date = $tempDate->format('Y-m-d');
+                    $dayOfWeek = $tempDay;
+                    break;
+                }
+            }
+            if (!$date) continue; // لم نتمكن من توليد تاريخ مناسب
+
+            // اختيار slot متوافق مع اليوم
+            $slot = $doctor->availableSlots->random(null);
+            if (!$slot) continue;
+
+            // تحقق من عدم وجود تعارض للمريض
+            $conflict = Appointment::where('date', $date)
+                ->where('slot_id', $slot->id)
                 ->exists();
-
             if ($conflict) continue;
 
+            // إنشاء الموعد
             Appointment::create([
                 'doctor_id' => $doctor->id,
                 'patient_id' => $patient->id,
-                'department_id' => $departmentId,
+                'department_id' => $doctor->department_id,
                 'date' => $date,
-                'slot_id' => $slotId,
+                'slot_id' => $slot->id,
                 'type' => $faker->randomElement(['check_up', 'follow_up']),
-                'specialization' => $specialization,
-                'status' => 'pending',
-                'total_price' => null,
-                'payment_status' => false,
-                'with_medical_report' => false,
+                'specialization' => $doctor->department->name ?? 'General',
+                'status' => $status,
+                'total_price' => 50000 ,
+                'payment_status' => $status === 'completed',
+                'with_medical_report' => $status === 'completed' && $faker->boolean(30),
             ]);
 
             $appointmentsCreated++;
         }
 
-        echo "✅ Future Appointments created: $appointmentsCreated\n";
-
-        // 🟣 المواعيد السابقة (status = completed)
-        $completedAppointments = 0;
-        $maxCompleted = 40;
-        $attempts = 0;
-
-        while ($completedAppointments < $maxCompleted && $attempts < $maxAttempts) {
-            $attempts++;
-
-            $patient = $patients->random();
-            $doctor = $doctors->random();
-
-            $departmentId = $doctor->department_id;
-            $specialization = $doctor->department->name ?? 'General';
-
-            $slotIds = $doctor->availableSlots()->pluck('available_slots.id')->toArray();
-            if (empty($slotIds)) continue;
-
-            $slotId = $faker->randomElement($slotIds);
-
-            // ✅ نولد تاريخ عشوائي قبل اليوم (مثلاً من -30 يوم إلى -1 يوم)
-            $date = Carbon::today('Asia/Damascus')->subDays(rand(1, 30))->format('Y-m-d');
-
-            $conflict = Appointment::where('patient_id', $patient->id)
-                ->where('date', $date)
-                ->where('slot_id', $slotId)
-                ->exists();
-
-            if ($conflict) continue;
-
-            Appointment::create([
-                'doctor_id' => $doctor->id,
-                'patient_id' => $patient->id,
-                'department_id' => $departmentId,
-                'date' => $date,
-                'slot_id' => $slotId,
-                'type' => $faker->randomElement(['check_up', 'follow_up']),
-                'specialization' => $specialization,
-                'status' => 'completed',
-                'total_price' => 50000,
-                'payment_status' => true,
-                'with_medical_report' => $faker->boolean(30),
-            ]);
-            $completedAppointments++;
-        }
-
-        echo "✅ Completed Appointments created: $completedAppointments\n";
+        echo "✅ $status Appointments created: $appointmentsCreated\n";
     }
 }

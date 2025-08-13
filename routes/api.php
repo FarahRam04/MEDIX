@@ -52,6 +52,7 @@ Route::get('/most_rated_doctors',[DoctorController::class, 'getMostRatedDoctors'
 Route::get('/top5',[DoctorController::class, 'getTop5Doctors']);
 Route::get('/doctors/{id}/profile',[DoctorController::class, 'getDoctorProfile']);
 
+Route::get('/doctors/department/{id}',[DoctorController::class,'getDoctorsRelatedToDepartment']);
 //routes only for users
 Route::middleware(['auth:sanctum','is_user'])->group(function () {
     Route::post('/user_logout',[UserControllerAuth::class,'logout']);

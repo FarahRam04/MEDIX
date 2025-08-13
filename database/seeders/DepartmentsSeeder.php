@@ -26,6 +26,12 @@ class DepartmentsSeeder extends Seeder
             [
                 'name'=>'Gastroenterology'
             ],
+            [
+                'name'=>'Neurology'
+            ],
+            [
+                'name'=>'Pediatric'
+            ]
 
         ]);
     }

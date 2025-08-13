@@ -6,6 +6,7 @@ use App\Http\Resources\DoctorResource;
 use App\Http\Resources\HomeResource;
 use App\Models\Advice;
 use App\Models\Appointment;
+use App\Models\Department;
 use App\Models\LabTest;
 use App\Models\Qualification;
 use App\Models\Surgery;
@@ -19,8 +20,11 @@ use App\Models\Doctor;
 use Illuminate\Http\Request;
 
 use App\Models\Medication;
+
+
 class DoctorController extends Controller
 {
+
     public function index()
     {
         return response()->json(Doctor::with('employee','department')->get(),200);
@@ -306,11 +310,37 @@ class DoctorController extends Controller
 
     public function getDoctorProfile($id)
     {
+
         $doctor=Doctor::with('employee.time','department','qualifications')->find($id);
         if (!$doctor) {
             return  response()->json(['doctor not found.']);
         }
         return new DoctorResource($doctor);
+    }
+    public function getDoctorsRelatedToDepartment(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:morning,afternoon'
+        ]);
+
+        $startTime = $request->status === 'morning' ? '09:00:00' : '14:00:00';
+
+        $doctors = Doctor::with(['employee.time'])
+            ->where('department_id', $id)
+            ->whereHas('employee.time', fn($q) => $q->where('start_time', $startTime))
+            ->get()
+            ->map(function ($doctor){
+                return[
+                    'id'=>$doctor->id,
+                    'name'=>$doctor->employee->first_name.' '.$doctor->employee->last_name,
+                    'image'=>$doctor->image_url,
+                    'shift'=>$doctor->employee->time->start_time === '09:00:00' ? 'Morning' :'Afternoon',
+                    'treatments'=>$doctor->number_of_treatments,
+                    'experience'=>$doctor->years_of_experience,
+                    'rate'=>$doctor->final_rating
+                ];
+            });
+        return response()->json($doctors);
     }
 
 

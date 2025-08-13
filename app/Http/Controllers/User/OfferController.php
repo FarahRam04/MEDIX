@@ -29,6 +29,8 @@ class OfferController extends Controller
             'selected_service.request_type_id' => 'nullable|in:1,2',
             'selected_service.with_medical_report' => 'nullable|boolean',
         ]);
+
+
         $offer = Offer::findOrFail($request->offer_id);
 
         $finalPrice=0;

@@ -11,6 +11,7 @@ use App\Models\Doctor;
 use App\Models\Offer;
 use App\Models\Patient;
 use App\Models\User;
+use App\Services\AppointmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -238,11 +239,15 @@ class PatientController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(BookAppointmentRequest $request, $id)
+    public function update(BookAppointmentRequest $request, $id,AppointmentService $service)
     {
-        DB::transaction(function () use ($request, $id) {
+        DB::transaction(function () use ($request, $id,$service) {
             $appointment = Appointment::findOrFail($id);
-
+            if (!$service->canBeCancelledAndEdited($appointment)) {
+                throw ValidationException::withMessages([
+                    'unauthorized' => 'You cannot update your appointment because less than 24 hours remain before it.',
+                ]);
+            }
             $user = auth()->user();
             $patient = $appointment->patient;
 
