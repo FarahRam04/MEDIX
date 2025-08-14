@@ -110,7 +110,7 @@ Route::middleware(['auth:sanctum','is_admin'])->group(function () {
     Route::controller(VacationController::class)->group(function (){
         Route::get('/vacations', 'index');
         Route::post('/vacations/create', 'store');
-        Route::put('/vacations/{vacation}', 'update');
+        Route::put('/vacations/{id}', 'update');
         Route::delete('/vacations/{id}/delete', 'destroy');
         Route::get('/vacations/{id}/show', 'show');
     });

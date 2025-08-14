@@ -10,7 +10,7 @@ use App\Models\Appointment;
 use App\Models\User;
 use App\Models\Vacation;
 use App\Services\NotificationService;
-use http\Env\Response;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 
@@ -66,25 +66,54 @@ class VacationController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateVacationRequest $request, Vacation $vacation)
+    public function update(UpdateVacationRequest $request, string $id)
     {
+        $vacationToUpdate = Vacation::find($id);
+        if (!$vacationToUpdate) {
+            return response()->json(['message' => 'Vacation not found!'], 404);
+        }
+        $validatedData = $request->validated();
+        if (in_array($vacationToUpdate->status, ['expired', 'cancelled']) && $vacationToUpdate->status !== 'active') {
+            return response()->json(['message' => ['status' => ['لا يمكن تعديل إجازة في حالة منتهية أو ملغاة.']]], 422);
+        }
 
-        $validated = $request->validated();
-        $vacation->update($validated);
-        if ($vacation->employee->role === 'doctor'&&$vacation->status === 'active') {
-        $startDay = $validated['start_day'] ?? $vacation->start_day;
-        $endDay = $validated['end_day'] ?? $vacation->end_day;
+        $employee = $vacationToUpdate->employee;
+        $startDay = $request->input('start_day', $vacationToUpdate->start_day);
+        $endDay = $request->input('end_day', $vacationToUpdate->end_day);
+        $days = $request->input('days', $vacationToUpdate->days);
 
-        // إلغاء المواعيد ضمن فترة الإجازة للطبيب
-        $this->cancelAppointmentsForVacation(
-            $vacation->employee_id, // استخدم ID الموظف من الإجازة مباشرة
-            $startDay,
-            $endDay
-        );}
+        if ($request->has('days') || $request->has('start_day') || $request->has('end_day')) {
+            $calculatedDays = Carbon::parse($startDay)->diffInDays(Carbon::parse($endDay)) + 1;
+            if ($days != $calculatedDays) {
+                return response()->json(['message' => ['days' => ['عدد الأيام المدخل (' . $days . ') لا يتطابق مع الفترة المحددة. الصحيح هو: ' . $calculatedDays]]], 422);
+            }
+        }
+        // عدم تدخل اجازتين
+        $isOverlapping = Vacation::where('employee_id', $employee->id)
+            ->where('id', '!=', $vacationToUpdate->id)
+            ->where('status', '!=', 'cancelled')
+            ->where('start_day', '<=', $endDay)
+            ->where('end_day', '>=', $startDay)
+            ->exists();
+        if ($isOverlapping) {
+            return response()->json(['message' => ['start_day' => ['فترة الإجازة المعدلة تتداخل مع إجازة أخرى.']]], 422);
+        }
+        //  التحقق من رصيد الإجازات
+        $usedDays = $employee->vacations()->where('id', '!=', $vacationToUpdate->id)->whereIn('status', ['active', 'expired'])->sum('days');
+        $maxDays = ($employee->role === 'doctor') ? 40 : 14;
+        if (($usedDays + $days) > $maxDays) {
+            return response()->json(['message' => ['days' => ['رصيد الإجازات سيتجاوز الحد المسموح به']]], 422);
+        }
+
+        $vacationToUpdate->update($validatedData);
+
+        if ($vacationToUpdate->employee->role === 'doctor' && $vacationToUpdate->status === 'active') {
+            $this->cancelAppointmentsForVacation($vacationToUpdate->employee_id, $startDay, $endDay);
+        }
 
         return response()->json([
             'message' => 'Vacation updated successfully',
-            'vacation' => new VacationResource($vacation->load('employee')) // أعد تحميل العلاقة للتأكد من حداثة البيانات
+            'vacation' => new VacationResource($vacationToUpdate->load('employee'))
         ], 200);
     }
 
@@ -126,10 +155,12 @@ class VacationController extends Controller
             // إرسال إشعار للمريض عنده fcm_token
                 $title = 'إلغاء الموعد';
                 $body = 'تم إلغاء موعدك مع الطبيب بتاريخ ' . $appointment->date . ' بسبب إجازة الطبيب.';
-                $type = 'appointment';
+                $type = 'cancellation';
 
                 $notificationService->sendFCMNotification($user->fcm_token, $title, $body, $type);
 
         }
     }
 }
+
+
