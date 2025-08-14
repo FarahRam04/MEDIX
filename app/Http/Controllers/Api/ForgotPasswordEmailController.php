@@ -11,7 +11,6 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\SendCodeResetPassword;
 
 class ForgotPasswordEmailController extends Controller
 {
@@ -54,7 +53,6 @@ class ForgotPasswordEmailController extends Controller
         );
 
         // إرسال الكود بالإيميل
-// Mail::to($request->email)->send(new SendCodeResetPassword($codeData->code));
         Mail::raw("Your verification code is: $code", function ($message) use ($request) {
             $message->to($request->email)
                 ->subject('Reset password');

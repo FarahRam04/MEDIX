@@ -106,14 +106,14 @@ Route::middleware(['auth:sanctum','is_admin'])->group(function () {
         Route::delete('/departments/{id}', 'destroy');//delete a department
         Route::get('/departments/{id}/show', 'show');
     });
-//
-//    Route::controller(VacationController::class)->group(function (){
-//        Route::get('/vacations', 'index');
-//        Route::post('/vacations/create', 'store');
-//        Route::put('/vacations/{id}', 'update');
-//        Route::delete('/vacations/{id}/delete', 'destroy');
-//        Route::get('/vacations/{id}/show', 'show');
-//    });
+
+    Route::controller(VacationController::class)->group(function (){
+        Route::get('/vacations', 'index');
+        Route::post('/vacations/create', 'store');
+        Route::put('/vacations/{vacation}', 'update');
+        Route::delete('/vacations/{id}/delete', 'destroy');
+        Route::get('/vacations/{id}/show', 'show');
+    });
 
 
     Route::get('/users',[UserController::class, 'index']);//get all users

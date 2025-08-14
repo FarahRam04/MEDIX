@@ -18,15 +18,10 @@ class SendAppointmentReminders extends Command
         $targetDate = $targetDateTime->toDateString();
         $targetTime = $targetDateTime->format('H:i:s'); // وقت الموعد بالضبط
 
-// حساب مجال زمني ±5 دقائق
-        $fromTime = $targetDateTime->copy()->subMinutes(5)->format('H:i:s');
-        $toTime = $targetDateTime->copy()->addMinutes(5)->format('H:i:s');
-
         // جلب كل المواعيد التي تحدث بالضبط بعد 24 ساعة
         $appointments = Appointment::with(['slot', 'patient.user'])
             ->whereDate('date', $targetDate)          // مواعيد الغد
-            ->whereRelation('slot','start_time', '>=', $fromTime)
-            ->whereRelation('slot','start_time', '<=', $toTime)
+            ->whereRelation('slot', 'start_time', $targetTime)  // وقت الموعد بالضبط
             ->where('status', 'pending')
             ->get();
 

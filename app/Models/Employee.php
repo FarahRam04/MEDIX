@@ -16,7 +16,8 @@ class Employee extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
+            'email_verified_at' => 'da
+            tetime',
             'password' => 'hashed',
         ];
     }
@@ -33,5 +34,8 @@ class Employee extends Authenticatable
         return $this->hasOne(Time::class);
     }
 
+    public  function vacations(){
+        return $this->hasMany(Vacation::class);
+    }
 }
 
