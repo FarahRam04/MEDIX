@@ -29,7 +29,7 @@ class NotificationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'user_id' => 2,
+                'user_id' => 1,
                 'title' => 'وصفة طبية جديدة',
                 'body' => 'تمت إضافة وصفة طبية جديدة إلى حسابك.',
                 'type' => 'prescription',
@@ -40,7 +40,7 @@ class NotificationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'user_id' => 3,
+                'user_id' => 1,
                 'title' => 'تقرير الفحوصات',
                 'body' => 'تم رفع تقرير فحوصاتك على النظام.',
                 'type' => 'report',
@@ -51,7 +51,7 @@ class NotificationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'user_id' => 4,
+                'user_id' => 1,
                 'title' => 'إلغاء الموعد',
                 'body' => 'تم إلغاء موعدك المحجوز بتاريخ 15-08-2025.',
                 'type' => 'cancellation',
