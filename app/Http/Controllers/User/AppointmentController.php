@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\User_By_Farah;
+namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AppointmentResource;

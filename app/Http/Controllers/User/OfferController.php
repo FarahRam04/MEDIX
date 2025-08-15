@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\User_By_Farah;
+namespace App\Http\Controllers\User;
 
 use App\HelperFunctions;
 use App\Http\Controllers\Controller;
