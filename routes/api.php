@@ -6,8 +6,6 @@ use App\Http\Controllers\Api\ForgetPasswordWhatsappController;
 use App\Http\Controllers\Api\ForgotPasswordEmailController;
 use App\Http\Controllers\Api\ResetPasswordEmailController;
 use App\Http\Controllers\Api\ResetPasswordWhatsappController;
-use App\Http\Controllers\AppointmentController;
-use App\Http\Controllers\BookingPage;
 use App\Http\Controllers\Dashboard\AdminAndEmployeeAuth;
 use App\Http\Controllers\Dashboard\DepartmentController;
 use App\Http\Controllers\Dashboard\DoctorController;
@@ -16,10 +14,12 @@ use App\Http\Controllers\Dashboard\TimeController;
 use App\Http\Controllers\Dashboard\VacationController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\User\OfferController;
-use App\Http\Controllers\User\PatientController;
-use App\Http\Controllers\User\UserController;
-use App\Http\Controllers\User\UserControllerAuth;
+use App\Http\Controllers\User_By_Farah\AppointmentController;
+use App\Http\Controllers\User_By_Farah\BookingPage;
+use App\Http\Controllers\User_By_Farah\OfferController;
+use App\Http\Controllers\User_By_Farah\PatientController;
+use App\Http\Controllers\User_By_Farah\UserController;
+use App\Http\Controllers\User_By_Farah\UserControllerAuth;
 use App\Http\Controllers\WhatsAppController;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
@@ -69,7 +69,10 @@ Route::middleware(['auth:sanctum','is_user'])->group(function () {
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::get('/points',[UserController::class, 'getPoints']);
     Route::post('/refresh_token',[UserControllerAuth::class,'refreshToken']);
-
+    Route::get('/user/profile',[UserController::class,'getUserProfile']);
+    Route::put('/user/profile',[UserController::class,'updateUserProfile']);
+    Route::put('/user/email',[EmailController::class,'updateEmail_V_Code']);
+    Route::put('/user/password',[UserController::class,'updatePassword']);
 
 
 

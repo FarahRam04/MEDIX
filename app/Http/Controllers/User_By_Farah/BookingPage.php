@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\User_By_Farah;
 
+use App\Http\Controllers\Controller;
 use App\Models\AvailableSlot;
 use App\Models\Department;
 use App\Models\Offer;

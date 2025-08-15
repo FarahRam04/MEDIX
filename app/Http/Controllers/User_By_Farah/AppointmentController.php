@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\User_By_Farah;
 
+use App\Http\Controllers\Controller;
 use App\Http\Resources\AppointmentResource;
 use App\Models\Appointment;
 use App\Services\AppointmentService;
 use Carbon\Carbon;
-use Carbon\CarbonTimeZone;
 use Illuminate\Http\Request;
 
 class AppointmentController extends Controller

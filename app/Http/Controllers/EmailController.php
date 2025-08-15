@@ -44,7 +44,7 @@ EmailController extends Controller
 
         return response()->json(['message' => 'Verification code sent.']);
     }
-    public function verifyCode(Request $request)
+    public function verify_Code(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
@@ -57,11 +57,35 @@ EmailController extends Controller
             ->first();
 
         if (!$verification) {
-            return response()->json(['message' => 'Invalid or expired code.'], 401);
+            return false;
         }
 
 
         // حذف الكود من جدول التحقق
         $verification->delete();
-        return response()->json(['message' => 'Email verified successfully.']);}
+        return true;
+
+    }
+
+    public function verifyCode(Request $request){
+        $verified=$this->verify_Code($request);
+        if (!$verified) {
+            return response()->json(['message' => 'Invalid or expired code.'], 401);
+        }
+            return response()->json(['message' => 'Email verified successfully.'],200);
+
+    }
+    public function updateEmail_V_Code(Request $request){
+        $verified=$this->verify_Code($request);
+        if (!$verified) {
+            return response()->json(['message' => 'Invalid or expired code.'], 401);
+        }
+        $user=auth()->user();
+        $user->email=$request->input('email');
+        $user->update();
+        return response()->json(['message' => 'Email verified and updated successfully .'],200);
+
+    }
+
+
 }
