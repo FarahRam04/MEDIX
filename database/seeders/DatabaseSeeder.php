@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
         $this->call([OffersSeeder::class]);
         $this->call(VacationSeeder::class);
         $this->call(NotificationSeeder::class);
+        $this->call([Additional_Cost_Seeder::class]);
     }
 
 }

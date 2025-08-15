@@ -75,6 +75,8 @@ Route::middleware(['auth:sanctum','is_user'])->group(function () {
     Route::put('/user/profile',[UserController::class,'updateUserProfile']);
     Route::put('/user/email',[EmailController::class,'updateEmail_V_Code']);
     Route::put('/user/password',[UserController::class,'updatePassword']);
+    Route::get('/user/bills',[AppointmentController::class, 'getUserBills']);
+    Route::get('/user/bill/{id}',[AppointmentController::class, 'getBillDetails']);
 
 
 

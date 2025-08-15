@@ -68,8 +68,7 @@ class AppointmentSeeder extends Seeder
                 ->exists();
             if ($conflict) continue;
 
-            // إنشاء الموعد
-            Appointment::create([
+            $data=[
                 'doctor_id' => $doctor->id,
                 'patient_id' => $patient->id,
                 'department_id' => $doctor->department_id,
@@ -78,10 +77,26 @@ class AppointmentSeeder extends Seeder
                 'type' => $faker->randomElement(['check_up', 'follow_up']),
                 'specialization' => $doctor->department->name ?? 'General',
                 'status' => $status,
-                'total_price' => 50000 ,
                 'payment_status' => $status === 'completed',
                 'with_medical_report' => $status === 'completed' && $faker->boolean(30),
-            ]);
+            ];
+            if ($data['type'] === 'check_up') {
+                $total_price=50000;
+                if ($data['with_medical_report']) {
+                    $total_price+=20000;
+                }
+                $data['total_price'] = $total_price;
+            }
+            elseif ($data['type'] === 'follow_up') {
+                $total=25000;
+                if ($data['with_medical_report']) {
+                    $total+=20000;
+                }
+                $data['total_price'] = $total;
+            }
+
+            // إنشاء الموعد
+            Appointment::create($data);
 
             $appointmentsCreated++;
         }
