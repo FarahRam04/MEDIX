@@ -11,4 +11,9 @@ class Offer extends Model
     public function appointments(){
         return $this->hasMany(Appointment::class);
     }
+
+    public function doctor()
+    {
+        return $this->belongsTo(Doctor::class);
+    }
 }

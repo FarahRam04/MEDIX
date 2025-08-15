@@ -55,6 +55,8 @@ Route::get('/doctors/{id}/profile',[DoctorController::class, 'getDoctorProfile']
 Route::get('/doctors/department/{id}',[DoctorController::class,'getDoctorsRelatedToDepartment']);
 Route::get('/appointment/{id}/bill',[AppointmentController::class,'testBill']);
 
+Route::get('/days/doctor/{id}',[BookingPage::class, 'getDaysRelatedToDoctor']);
+
 //routes only for users
 Route::middleware(['auth:sanctum','is_user'])->group(function () {
     Route::post('/user_logout',[UserControllerAuth::class,'logout']);
