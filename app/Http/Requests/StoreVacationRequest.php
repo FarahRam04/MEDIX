@@ -28,7 +28,7 @@ class StoreVacationRequest extends FormRequest
             if ($this->days != $calculatedDays) {
                 $validator->errors()->add(
                     'days',
-                    'عدد الأيام المدخل لا يتطابق مع الفترة المحددة بين تاريخ البداية والنهاية.'
+                    'عدد الأيام المدخل لا يتطابق مع الفترة المحددة بين تاريخ البداية والنهاية,الصحيح هو'.$calculatedDays
                 );
                 return; // نتوقف هنا لأن البيانات الأساسية غير متناسقة
             }
@@ -50,7 +50,7 @@ class StoreVacationRequest extends FormRequest
             };
 
             $usedDays = $employee->vacations()
-                ->whereIn('status', ['active', 'ended'])
+                ->whereIn('status', ['active', 'expired'])
                 ->sum('days');
 
             $totalAfterRequest = $usedDays + $this->days; // نستخدم الأيام من الطلب
