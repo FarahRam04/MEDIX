@@ -10,6 +10,7 @@ use App\Http\Controllers\Dashboard\AdminAndEmployeeAuth;
 use App\Http\Controllers\Dashboard\DepartmentController;
 use App\Http\Controllers\Dashboard\DoctorController;
 use App\Http\Controllers\Dashboard\EmployeeController;
+use App\Http\Controllers\Dashboard\SalaryController;
 use App\Http\Controllers\Dashboard\TimeController;
 use App\Http\Controllers\Dashboard\VacationController;
 use App\Http\Controllers\EmailController;
@@ -121,6 +122,16 @@ Route::middleware(['auth:sanctum','is_admin'])->group(function () {
         Route::delete('/vacations/{id}/delete', 'destroy');
         Route::get('/vacations/{id}/show', 'show');
     });
+
+    Route::controller(SalaryController::class)->group(function (){
+        Route::get('/salaries', 'index');
+        Route::post('/salaries/create', 'store');
+        Route::put('/salaries/{id}', 'update');
+        Route::delete('/salaries/{id}/delete', 'destroy');
+        Route::get('/salaries/{id}/show', 'show');
+    });
+
+
 
 
     Route::get('/users',[UserController::class, 'index']);//get all users

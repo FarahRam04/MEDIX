@@ -37,5 +37,9 @@ class Employee extends Authenticatable
     public  function vacations(){
         return $this->hasMany(Vacation::class);
     }
+    public function salaries()
+    {
+        return $this->hasMany(Salary::class);
+    }
 }
 
