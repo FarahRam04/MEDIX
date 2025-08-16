@@ -55,6 +55,8 @@ Route::get('/doctors/{id}/profile',[DoctorController::class, 'getDoctorProfile']
 Route::get('/doctors/department/{id}',[DoctorController::class,'getDoctorsRelatedToDepartment']);
 Route::get('/appointment/{id}/bill',[AppointmentController::class,'testBill']);
 
+Route::get('/days/doctor/{id}',[BookingPage::class, 'getDaysRelatedToDoctor']);
+
 //routes only for users
 Route::middleware(['auth:sanctum','is_user'])->group(function () {
     Route::post('/user_logout',[UserControllerAuth::class,'logout']);
@@ -73,6 +75,8 @@ Route::middleware(['auth:sanctum','is_user'])->group(function () {
     Route::put('/user/profile',[UserController::class,'updateUserProfile']);
     Route::put('/user/email',[EmailController::class,'updateEmail_V_Code']);
     Route::put('/user/password',[UserController::class,'updatePassword']);
+    Route::get('/user/bills',[AppointmentController::class, 'getUserBills']);
+    Route::get('/user/bill/{id}',[AppointmentController::class, 'getBillDetails']);
 
 
 

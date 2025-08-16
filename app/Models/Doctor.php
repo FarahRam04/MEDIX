@@ -77,6 +77,11 @@ class Doctor extends Model
         return $this->hasMany(Qualification::class);
     }
 
+    public function offers()
+    {
+        return $this->hasMany(Offer::class);
+    }
+
 
 
 

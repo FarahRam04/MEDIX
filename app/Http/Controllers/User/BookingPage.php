@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\AvailableSlot;
 use App\Models\Department;
+use App\Models\Doctor;
 use App\Models\Offer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -65,7 +66,7 @@ class BookingPage extends Controller
         $result = $slots->map(function ($slot) {
             return [
                 'id' => $slot->id,
-                'time' => $slot->start_time, // لأنه عندك فقط start_time بدون تاريخ
+                'time' => $slot->start_time,
                 'isAvailable' => false
             ];
         });
@@ -75,7 +76,6 @@ class BookingPage extends Controller
     public function offerDays($offerId)
     {
         $offer = Offer::find($offerId);
-
         if (!$offer) {
             return response()->json(['error' => 'Offer not found'], 404);
         }
@@ -83,13 +83,16 @@ class BookingPage extends Controller
         $start = Carbon::parse($offer->start_date)->startOfDay();
         $end = Carbon::parse($offer->end_date)->startOfDay();
 
-        // استدعاء التابع السابق
         $response = $this->getNextFiveDays();
         $days=$response->getData(true);
-        // تعديل isAvailable إذا ضمن المدى
-        foreach ($days as &$day) {//& للتعديل على المصفوفة الاصلية
+
+        $doctorDaysIds=$offer->doctor->employee->time->days->pluck('id')->toArray();
+        foreach ($days as &$day) {
             $date = Carbon::parse($day['day'])->startOfDay();
-            $day['isAvailable'] = $date->between($start, $end);
+
+            if ($date->between($start, $end) &&in_array($date->dayOfWeek,$doctorDaysIds)){
+                $day['isAvailable']=true;
+            }
         }
 
         return response()->json($days);
@@ -97,9 +100,9 @@ class BookingPage extends Controller
 
     public function getDepartmentAvailability($department_id)
     {
-        // استدعاء التابع الأصلي بدون تعديل
+
         $response = $this->getNextFiveDays();
-        $daysData = $response->getData(true); // نحول JsonResponse إلى Array
+        $daysData = $response->getData(true);
 
         foreach ($daysData as &$day) {
             $date = Carbon::parse($day['day']);
@@ -113,6 +116,26 @@ class BookingPage extends Controller
                 ->where('doctors.department_id', $department_id)
                 ->where('day_time.day_id', $dayId)
                 ->exists();
+        }
+
+        return response()->json($daysData);
+    }
+
+    public function getDaysRelatedToDoctor($doctor_id)
+    {
+        $doctor=Doctor::find($doctor_id);
+        if (! $doctor){
+            return response()->json(['error' => 'Doctor not found'], 404);
+        }
+        $response = $this->getNextFiveDays();
+        $daysData = $response->getData(true);
+        foreach ($daysData as &$day) {
+            $date = Carbon::parse($day['day']);
+            $dayId = $date->dayOfWeek;
+            $doctorDays=$doctor->employee->time->days->pluck('id')->toArray();
+            if (in_array($dayId, $doctorDays)){
+                $day['isAvailable']=true;
+            }
         }
 
         return response()->json($daysData);

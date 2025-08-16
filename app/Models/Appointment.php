@@ -49,4 +49,10 @@ class Appointment extends Model
     {
         return $this->belongsTo(Offer::class);
     }
+
+    public function additional_costs()
+    {
+        return $this->hasMany(Additional_Cost::class);
+
+    }
 }

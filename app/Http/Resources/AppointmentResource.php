@@ -17,7 +17,7 @@ class AppointmentResource extends JsonResource
                 : 'Unknown',
             'doctor_image' => $this->doctor?->image_url,
             'department' => $this->doctor?->department?->name,
-            'date_time' => Carbon::parse($this->date . ' ' . optional($this->slot)->start_time)->toIso8601String(),
+            'date_time' => Carbon::parse($this->date . ' ' . optional($this->slot)->start_time)->format('Y-m-d\TH:i:s'),
             'request_type_id' => $this->type === 'check_up' ? 1 : 2,
             'with_medical_report' => (bool) $this->with_medical_report,
         ];
