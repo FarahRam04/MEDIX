@@ -10,6 +10,7 @@ use App\Http\Controllers\Dashboard\AdminAndEmployeeAuth;
 use App\Http\Controllers\Dashboard\DepartmentController;
 use App\Http\Controllers\Dashboard\DoctorController;
 use App\Http\Controllers\Dashboard\EmployeeController;
+use App\Http\Controllers\Dashboard\OOfferController;
 use App\Http\Controllers\Dashboard\SalaryController;
 use App\Http\Controllers\Dashboard\TimeController;
 use App\Http\Controllers\Dashboard\VacationController;
@@ -129,6 +130,13 @@ Route::middleware(['auth:sanctum','is_admin'])->group(function () {
         Route::put('/salaries/{id}', 'update');
         Route::delete('/salaries/{id}/delete', 'destroy');
         Route::get('/salaries/{id}/show', 'show');
+    });
+    Route::controller(OOfferController::class)->group(function (){
+        Route::get('/dashboard/offers', 'index');
+        Route::post('/dashboard/offers/create', 'store');
+        Route::put('/dashboard/offers/{id}', 'update');
+        Route::delete('dashboard/offers/{id}/delete', 'destroy');
+      //  Route::get('/dashboard/offers/{id}/show', 'show');
     });
 
 
