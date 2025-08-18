@@ -28,7 +28,7 @@ class UserControllerAuth extends Controller
         $user->refresh();
 
         return response()->json([
-            'message' => 'user Registered successfully',
+            'message' => __('messages.register'),
             'User' => $user,
             'token' => $token,
         ]);
