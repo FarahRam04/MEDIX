@@ -69,7 +69,8 @@ class UserController extends Controller
             'Gender'=>$user->gender,
             'Phone Number'=>$user->phone_number,
             'email'=>$user->email,
-            'password'=>$user->password
+            'password'=>$user->password,
+            'image'=>asset('storage/'.$user->image)
         ],200);
     }
 

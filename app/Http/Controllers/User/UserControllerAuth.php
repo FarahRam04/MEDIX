@@ -9,28 +9,29 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class UserControllerAuth extends Controller
 {
     public function register(RegisterUserRequest $request)
     {
         $validated = $request->validated();
-        $validated['fcm_token_updated_at'] = now(); // إذا العمود موجود
         $validated['password'] = Hash::make($validated['password']);
+
+        if ($request->hasFile('image')){
+            $path = $request->file('image')->store('images', 'public');
+            $validated['image'] = $path;
+        }
         $user = User::create($validated);
-
         Auth::login($user);
-
-        $this->uploadImage($request);
 
         $token = $user->createToken('auth_token for u.' . $user->first_name)->plainTextToken;
 
         $user->refresh();
 
         return response()->json([
-            'message' => __('messages.register'),
-            'User' => $user,
-            'token' => $token,
+            'message'   => __('messages.register'),
+            'token'     => $token,
         ]);
     }
     public function refreshToken(Request $request){
@@ -48,25 +49,24 @@ class UserControllerAuth extends Controller
             'message' => 'FCM token updated successfully',
         ]);
     }
-    public function uploadImage(Request $request){
-        $request->validate([
-            'image' => 'image|mimes:jpeg,png,jpg,gif,svg',
-        ]);
+    public function uploadImage(Request $request)
+    {
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('images', 'public');
-            $user = User::find(Auth::id());
-            $user->image = asset('storage/' . $imagePath);
+            $request->validate([
+                'image' => 'image|mimes:jpeg,png,jpg,gif,svg',
+            ]);
+
+            $path = $request->file('image')->store('images', 'public');
+            $user = auth()->user();
+            $user->image = $path;
             $user->save();
 
             return response()->json([
                 'message' => 'Image uploaded successfully',
-                'path' => $user->image,
-                'user_id'=>$user->id,
-                'user_name'=>$user->first_name,
 
-                ]);
+            ]);
         }
-        return response()->json(['message' => 'Image not uploaded'],422);
+        return response()->json(['message' => 'Image not uploaded'], 422);
     }
 
 
@@ -86,7 +86,6 @@ class UserControllerAuth extends Controller
 
         return response()->json([
             'message' => 'Login successfully',
-            'User' => $user,
             'token' => $token,
         ]);
     }

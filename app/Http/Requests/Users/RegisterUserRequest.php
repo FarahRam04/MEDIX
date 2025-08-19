@@ -29,7 +29,7 @@ class RegisterUserRequest extends FormRequest
             'phone_number'=>'required|unique:users,phone_number|digits:10|numeric',
             'email'=>'required|unique:users,email|email|max:255',
             'password'=>'required|confirmed|min:8',
-            'image' => 'image|mimes:jpeg,png,jpg,gif,svg',
+            'image' => 'image|mimes:jpeg,png,jpg,gif,svg|nullable',
             'fcm_token'=> 'required|string',
         ];
     }

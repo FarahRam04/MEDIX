@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\User;
 
+use App\HelperFunctions;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AppointmentResource;
 use App\Http\Resources\BillsResource;
@@ -13,6 +14,7 @@ use Illuminate\Http\Request;
 
 class AppointmentController extends Controller
 {
+    use HelperFunctions;
 
     public function getPatientAppointments(Request $request)
     {
@@ -32,6 +34,8 @@ class AppointmentController extends Controller
             ->orderBy('date', 'desc')
             ->get();
 
+
+
         return AppointmentResource::collection($appointments);
     }
 
@@ -50,8 +54,35 @@ class AppointmentController extends Controller
             ->where('payment_status', $status)
             ->orderBy('date', 'desc')
             ->get();
+        $allData=[];
 
-        return BillsResource::collection($appointments);
+        foreach ($appointments as $appointment) {
+            $data=[
+                'id' => $appointment->id,
+                'status' => $appointment->payment_status === 0 ? 'unpaid' : 'paid',
+                'total_price'=>$appointment->total_price,
+                'currency' => 'SYP',
+                'doctor_name' => $appointment->doctor->employee->first_name . ' ' . $appointment->doctor->employee->last_name,
+                'department' => $appointment->department->name,
+                'appointment_date_time' => Carbon::parse(
+                    $appointment->date . ' ' . optional($appointment->slot)->start_time
+                )->format('Y-m-d\TH:i:s')
+            ];
+            if ($appointment->offer &&$appointment->offer->payment_method === 'points' && count($appointment->additional_costs)===0)
+                continue;
+            if ($appointment->offer &&$appointment->offer->payment_method === 'points' &&count($appointment->additional_costs) > 0 ){
+                $total_price=0;
+                foreach ($appointment->additional_costs as $additional_cost) {
+                    $total_price+=$additional_cost->price;
+                }
+                $data['total_price']=$total_price;
+            }
+
+               $allData[]=$data;
+
+
+        }
+        return response()->json($allData, 200);
     }
 
     public function getBillDetails($bill_id)//bill_id == appointment_id
@@ -86,7 +117,7 @@ class AppointmentController extends Controller
             foreach ($additional_costs as &$additional_cost){
                 $additional_key=$additional_cost['title'].'Price';
                 $additional_value=$additional_cost['price'];
-                $data[$additional_key]=$additional_value.'';
+                $data[$additional_key]=$additional_value.' SYP';
                 $total_price+= $additional_value;
             }
             $data['Total Price']=$total_price.' SYP';
@@ -102,24 +133,23 @@ class AppointmentController extends Controller
         $appointment = Appointment::with(['slot', 'doctor']) // تأكد أن العلاقات معرفة
         ->findOrFail($id);
 
-        // تحويل النوع إلى request_type_id
         $requestTypeId = match ($appointment->type) {
             'check_up' => 1,
             'follow_up' => 2,
             default => null
         };
-
-        // استخراج time_id من جدول الـ slot
-        $timeId = $appointment->slot_id;
-
-        return response()->json([
-            'department_id'       => $appointment->department_id,
+        $data=
+            ['department_id'      => $appointment->department_id,
             'doctor_id'           => $appointment->doctor_id,
             'request_type_id'     => $requestTypeId,
             'day'                 => $appointment->date,
-            'time_id'             => $timeId,
+            'time_id'             => $appointment->slot_id,
             'with_medical_report' => (bool) $appointment->with_medical_report,
-        ]);
+            ];
+        if ($appointment->offer_id ){
+            $data['offer_id']=$appointment->offer_id;
+        }
+        return response()->json($data);
     }
 
     public function canCancelAppointment($id, AppointmentService $service)

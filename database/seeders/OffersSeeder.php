@@ -14,7 +14,7 @@ class OffersSeeder extends Seeder
     {
         $offers = [
             [
-                'offer_name' => 'عرض القلب السليم', // <-- الاسم المضاف
+                'offer_name' => 'Healthy Heart',
                 'image' => 'storage/offers/offer1.jpg',
                 'department_id' => 2, // Cardiology
                 'payment_method' => 'cash',
@@ -22,7 +22,7 @@ class OffersSeeder extends Seeder
                 'points_required' => null
             ],
             [
-                'offer_name' => 'عرض ابتسامة طفلك', // <-- الاسم المضاف
+                'offer_name' => 'Your child smile',
                 'image' => 'storage/offers/offer2.jpg',
                 'department_id' => 6, // Pediatric
                 'payment_method' => 'points',
@@ -30,7 +30,7 @@ class OffersSeeder extends Seeder
                 'points_required' => 350
             ],
             [
-                'offer_name' => 'فحص الأعصاب الذهبي', // <-- الاسم المضاف
+                'offer_name' => 'Golden neurological examination',
                 'image' => 'storage/offers/offer3.jpg',
                 'department_id' => 5, // Neurology
                 'payment_method' => 'cash',
@@ -38,7 +38,7 @@ class OffersSeeder extends Seeder
                 'points_required' => null
             ],
             [
-                'offer_name' => 'عرض البشرة النضرة', // <-- الاسم المضاف
+                'offer_name' => 'Radiant skin',
                 'image' => 'storage/offers/offer4.jpg',
                 'department_id' => 3, // Dermatology
                 'payment_method' => 'points',
