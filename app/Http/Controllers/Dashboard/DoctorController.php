@@ -98,7 +98,7 @@ class DoctorController extends Controller
             }
 
             // رفع الصورة الجديدة وتحديث المسار
-            $imagePath = $request->file('image')->store('images', 'public');
+            $imagePath = $request->file('image')->store('doctors', 'public');
             $doctor->image = $imagePath;
         }
 

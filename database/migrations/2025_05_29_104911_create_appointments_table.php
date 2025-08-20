@@ -17,6 +17,8 @@ return new class extends Migration
             $table->foreignId('doctor_id')->constrained('doctors')->onDelete('cascade');
             $table->foreignId('patient_id')->constrained('patients')->onDelete('cascade');
             $table->foreignId('department_id')->constrained('departments')->onDelete('cascade');
+            $table->foreignId('offer_id')->nullable()->constrained('offers')->onDelete('set null');
+
 
             $table->date('date'); // تاريخ الحجز
             $table->foreignId('slot_id')->constrained('available_slots')->onDelete('cascade'); // وقت الحجز الثابت
@@ -34,6 +36,7 @@ return new class extends Migration
 
             $table->boolean('is_prescription_viewed')->default(false);
             $table->boolean('is_rated')->default(false);
+
 
             $table->timestamps();
         });

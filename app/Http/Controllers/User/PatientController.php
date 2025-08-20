@@ -124,9 +124,10 @@ class PatientController extends Controller
             // 8. قفل الـ slot للحجز الآمن
             $slot = AvailableSlot::lockForUpdate()->findOrFail($request->slot_id);
 
-
+            $offer=null;
             if ($request->input('offer_id')){
                 $offer = Offer::findOrFail($request->offer_id);
+
                 if ($offer->payment_method === 'cash') {
                     $finalPrice=$this->getTotalOfferPrice($offer->id,$request->request_type_id,$request->with_medical_report);
                 }
@@ -156,12 +157,14 @@ class PatientController extends Controller
                 'doctor_id'           => $request->doctor_id,
                 'patient_id'          => $patient->id,
                 'department_id'       => $department_id,
+                'offer_id'            => $offer->id ?? null,
                 'date'                => $request->date,
                 'slot_id'             => $request->slot_id,
                 'type'                => $request->request_type_id ===1 ?'check_up' : 'follow_up',
                 'with_medical_report' => $request->with_medical_report ?? false,
                 'specialization'      => $specialization,
                 'total_price'         => $finalPrice ?? $priceWithoutOffer,
+
             ]);
         });
 
