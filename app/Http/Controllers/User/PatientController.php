@@ -32,6 +32,147 @@ class PatientController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+//    public function store(BookAppointmentRequest $request)
+//    {
+//        DB::transaction(function () use ($request) {
+//            // 1. جلب المستخدم من التوكن وتحديث حالته كمريض
+//            $user = auth()->user();
+//            $user->is_patient = true;
+//            $user->save();
+//
+//            // 2. إنشاء مريض إذا لم يكن موجود
+//            $patient = Patient::firstOrCreate([
+//                'user_id' => $user->id
+//            ]);
+//
+//            // 3. جلب الدكتور والتخصص
+//            $doctor = Doctor::findOrFail($request->doctor_id);
+//            if ($doctor->department_id !== (int) $request->department_id) {
+//                throw ValidationException::withMessages([
+//                    'department_id' => 'this doctor does not work in that department',
+//                ]);
+//            }
+//            $department_id = $doctor->department_id;
+//            $specialization = $doctor->department->name;
+//
+//            // 4. التأكد أن الـ slot فعلاً مربوط بهذا الدكتور
+//            $exists = DB::table('available_slot_doctor')
+//                ->where('available_slot_id', $request->slot_id)
+//                ->where('doctor_id', $request->doctor_id)
+//                ->exists();
+//            if (!$exists) {
+//                throw ValidationException::withMessages([
+//                    'slot_id' => 'this time does not belong to this doctor',
+//                ]);
+//            }
+//
+//            // 5. التأكد من أن الموعد غير محجوز مسبقًا لهذا الدكتور في نفس التاريخ والوقت
+//            $alreadyBooked = Appointment::where('doctor_id', $request->doctor_id)
+//                ->where('slot_id', $request->slot_id)
+//                ->where('date', $request->date)
+//                ->exists();
+//            if ($alreadyBooked) {
+//                throw ValidationException::withMessages([
+//                    'slot_id' => 'this time slot is already booked for this doctor',
+//                ]);
+//            }
+//
+//            // 6. التأكد أن المريض لا يملك موعدًا آخر في نفس التاريخ والوقت
+//            $patientConflict = Appointment::where('patient_id', $patient->id)
+//                ->where('slot_id', $request->slot_id)
+//                ->where('date', $request->date)
+//                ->exists();
+//            if ($patientConflict) {
+//                throw ValidationException::withMessages([
+//                    'slot_id' => 'Book denied: you already have another appointment at this time.',
+//                ]);
+//            }
+//
+//            // 7. التأكد من أن الدكتور يعمل في هذا اليوم
+//            $employeeId = DB::table('doctors')
+//                ->where('id', $request->doctor_id)
+//                ->value('employee_id');
+//
+//            $dayOfWeek = Carbon::parse($request->date)->dayOfWeek; // 0 = الأحد ... 6 = السبت
+//            $doctorWorksThatDay = DB::table('times')
+//                ->join('day_time', 'times.id', '=', 'day_time.time_id')
+//                ->where('times.employee_id', $employeeId)
+//                ->where('day_time.day_id', $dayOfWeek)
+//                ->exists();
+//            if (!$doctorWorksThatDay) {
+//                throw ValidationException::withMessages([
+//                    'date' => 'The doctor does not work in this day',
+//                ]);
+//            }
+//
+//            // 7.5 تحقق من شرط المراجعة (follow_up)
+//            if ($request->request_type_id === 2) {
+//                $visitedRecently = Appointment::where('doctor_id', $request->doctor_id)
+//                    ->where('patient_id', $patient->id)
+//                    ->where('type', 'check_up') // فقط المواعيد من نوع معاينة
+//                    ->whereDate('date', '>=', Carbon::parse($request->date)->subDays(15))
+//                    ->whereDate('date', '<', $request->date)
+//                    ->exists();
+//
+//                if (!$visitedRecently) {
+//                    throw ValidationException::withMessages([
+//                        'type' => 'You can only book a follow-up if you have visited this doctor within the last 15 days.',
+//                    ]);
+//                }
+//            }
+//
+//            // 8. قفل الـ slot للحجز الآمن
+//            $slot = AvailableSlot::lockForUpdate()->findOrFail($request->slot_id);
+//
+//            $offer=null;
+//            if ($request->input('offer_id')){
+//                $offer = Offer::findOrFail($request->offer_id);
+//
+//                if ($offer->payment_method === 'cash') {
+//                    $finalPrice=$this->getTotalOfferPrice($offer->id,$request->request_type_id,$request->with_medical_report);
+//                }
+//                elseif ($offer->payment_method === 'points') {
+//                    if ($user->points < $offer->points_required){
+//                        throw ValidationException::withMessages([
+//                            'points' => 'Sorry, you do not have enough points to book this appointment.',
+//                        ]);
+//                    } else {
+//                        $finalPrice = 0;
+//                        $user->points -= $offer->points_required;
+//                        $user->save();
+//                    }
+//                }
+//            }
+//            $priceWithoutOffer=0;
+//            if ($request->request_type_id === 1){
+//                $priceWithoutOffer=50000;
+//            }elseif ($request->request_type_id === 2){
+//                $priceWithoutOffer=25000;
+//            }
+//            if ($request->with_medical_report){
+//                $priceWithoutOffer+=20000;
+//            }
+//            // 9. إنشاء الموعد
+//            $appointment = Appointment::create([
+//                'doctor_id'           => $request->doctor_id,
+//                'patient_id'          => $patient->id,
+//                'department_id'       => $department_id,
+//                'offer_id'            => $offer->id ?? null,
+//                'date'                => $request->date,
+//                'slot_id'             => $request->slot_id,
+//                'type'                => $request->request_type_id ===1 ?'check_up' : 'follow_up',
+//                'with_medical_report' => $request->with_medical_report ?? false,
+//                'specialization'      => $specialization,
+//                'total_price'         => $finalPrice ?? $priceWithoutOffer,
+//
+//            ]);
+//        });
+//
+//        return response()->json(['message' => 'Appointment booked successfully']);
+//    }
+//
+
+
     public function store(BookAppointmentRequest $request)
     {
         DB::transaction(function () use ($request) {
@@ -40,44 +181,115 @@ class PatientController extends Controller
             $user->is_patient = true;
             $user->save();
 
-            // 2. إنشاء مريض إذا لم يكن موجود
+            // 2. إنشاء المريض إذا لم يكن موجود
             $patient = Patient::firstOrCreate([
                 'user_id' => $user->id
             ]);
 
-            // 3. جلب الدكتور والتخصص
-            $doctor = Doctor::findOrFail($request->doctor_id);
-            if ($doctor->department_id !== (int) $request->department_id) {
-                throw ValidationException::withMessages([
-                    'department_id' => 'this doctor does not work in that department',
-                ]);
-            }
-            $department_id = $doctor->department_id;
-            $specialization = $doctor->department->name;
+            $offer = null;
+            $finalPrice = null;
+            $doctor = null;
+            $department_id = null;
+            $specialization = null;
 
-            // 4. التأكد أن الـ slot فعلاً مربوط بهذا الدكتور
+            // ========================
+            // 🟢 حالة الحجز مع أوفر
+            // ========================
+            if ($request->input('offer_id')) {
+                $offer = Offer::findOrFail($request->offer_id);
+
+                // تحقق من تطابق الدكتور
+                if ($offer->doctor_id !== (int) $request->doctor_id) {
+                    throw ValidationException::withMessages([
+                        'doctor_id' => 'This doctor is not linked to the selected offer.',
+                    ]);
+                }
+
+                // تحقق من تطابق القسم
+                if ($offer->department_id !== (int) $request->department_id) {
+                    throw ValidationException::withMessages([
+                        'department_id' => 'This department is not linked to the selected offer.',
+                    ]);
+                }
+
+                $doctor = Doctor::findOrFail($offer->doctor_id);
+                $department_id = $offer->department_id;
+                $specialization = $doctor->department->name;
+
+                // حساب السعر بناءً على وسيلة الدفع
+                if ($offer->payment_method === 'cash') {
+                    $finalPrice = $this->getTotalOfferPrice(
+                        $offer->id,
+                        $request->request_type_id,
+                        $request->with_medical_report
+                    );
+                } elseif ($offer->payment_method === 'points') {
+                    if ($user->points < $offer->points_required) {
+                        throw ValidationException::withMessages([
+                            'points' => 'Sorry, you do not have enough points to book this appointment.',
+                        ]);
+                    } else {
+                        $finalPrice = 0;
+                        $user->points -= $offer->points_required;
+                        $user->save();
+                    }
+                }
+            }
+            // ========================
+            // 🟢 حالة الحجز العادي
+            // ========================
+            else
+            {
+                $doctor = Doctor::findOrFail($request->doctor_id);
+
+                if ($doctor->department_id !== (int) $request->department_id) {
+                    throw ValidationException::withMessages([
+                        'department_id' => 'This doctor does not work in that department',
+                    ]);
+                }
+
+                $department_id = $doctor->department_id;
+                $specialization = $doctor->department->name;
+
+                // السعر العادي
+                $priceWithoutOffer = 0;
+                if ($request->request_type_id === 1) { // check up
+                    $priceWithoutOffer = 50000;
+                } elseif ($request->request_type_id === 2) { // follow up
+                    $priceWithoutOffer = 25000;
+                }
+                if ($request->with_medical_report) {
+                    $priceWithoutOffer += 20000;
+                }
+                $finalPrice = $priceWithoutOffer;
+            }
+
+            // ========================
+            // 🟡 التشيكات المشتركة
+            // ========================
+
+            // 1. slot مرتبط بالدكتور
             $exists = DB::table('available_slot_doctor')
                 ->where('available_slot_id', $request->slot_id)
-                ->where('doctor_id', $request->doctor_id)
+                ->where('doctor_id', $doctor->id)
                 ->exists();
             if (!$exists) {
                 throw ValidationException::withMessages([
-                    'slot_id' => 'this time does not belong to this doctor',
+                    'slot_id' => 'This time does not belong to this doctor',
                 ]);
             }
-
-            // 5. التأكد من أن الموعد غير محجوز مسبقًا لهذا الدكتور في نفس التاريخ والوقت
-            $alreadyBooked = Appointment::where('doctor_id', $request->doctor_id)
+            // 2. عدم وجود حجز مسبق لهذا الدكتور
+            $alreadyBooked = Appointment::where('doctor_id', $doctor->id)
                 ->where('slot_id', $request->slot_id)
                 ->where('date', $request->date)
                 ->exists();
             if ($alreadyBooked) {
                 throw ValidationException::withMessages([
-                    'slot_id' => 'this time slot is already booked for this doctor',
+                    'slot_id' => 'This time slot is already booked for this doctor',
                 ]);
             }
 
-            // 6. التأكد أن المريض لا يملك موعدًا آخر في نفس التاريخ والوقت
+            // 3. عدم وجود تعارض عند المريض
             $patientConflict = Appointment::where('patient_id', $patient->id)
                 ->where('slot_id', $request->slot_id)
                 ->where('date', $request->date)
@@ -88,11 +300,8 @@ class PatientController extends Controller
                 ]);
             }
 
-            // 7. التأكد من أن الدكتور يعمل في هذا اليوم
-            $employeeId = DB::table('doctors')
-                ->where('id', $request->doctor_id)
-                ->value('employee_id');
-
+            // 4. تأكد أن الدكتور يعمل في هذا اليوم
+            $employeeId = $doctor->employee_id;
             $dayOfWeek = Carbon::parse($request->date)->dayOfWeek; // 0 = الأحد ... 6 = السبت
             $doctorWorksThatDay = DB::table('times')
                 ->join('day_time', 'times.id', '=', 'day_time.time_id')
@@ -105,11 +314,11 @@ class PatientController extends Controller
                 ]);
             }
 
-            // 7.5 تحقق من شرط المراجعة (follow_up)
+            // 5. تحقق من شرط المراجعة (follow_up)
             if ($request->request_type_id === 2) {
-                $visitedRecently = Appointment::where('doctor_id', $request->doctor_id)
+                $visitedRecently = Appointment::where('doctor_id', $doctor->id)
                     ->where('patient_id', $patient->id)
-                    ->where('type', 'check_up') // فقط المواعيد من نوع معاينة
+                    ->where('type', 'check_up')
                     ->whereDate('date', '>=', Carbon::parse($request->date)->subDays(15))
                     ->whereDate('date', '<', $request->date)
                     ->exists();
@@ -121,57 +330,28 @@ class PatientController extends Controller
                 }
             }
 
-            // 8. قفل الـ slot للحجز الآمن
+            // 6. قفل الـ slot
             $slot = AvailableSlot::lockForUpdate()->findOrFail($request->slot_id);
 
-            $offer=null;
-            if ($request->input('offer_id')){
-                $offer = Offer::findOrFail($request->offer_id);
-
-                if ($offer->payment_method === 'cash') {
-                    $finalPrice=$this->getTotalOfferPrice($offer->id,$request->request_type_id,$request->with_medical_report);
-                }
-                elseif ($offer->payment_method === 'points') {
-                    if ($user->points < $offer->points_required){
-                        throw ValidationException::withMessages([
-                            'points' => 'Sorry, you do not have enough points to book this appointment.',
-                        ]);
-                    } else {
-                        $finalPrice = 0;
-                        $user->points -= $offer->points_required;
-                        $user->save();
-                    }
-                }
-            }
-            $priceWithoutOffer=0;
-            if ($request->request_type_id === 1){
-                $priceWithoutOffer=50000;
-            }elseif ($request->request_type_id === 2){
-                $priceWithoutOffer=25000;
-            }
-            if ($request->with_medical_report){
-                $priceWithoutOffer+=20000;
-            }
-            // 9. إنشاء الموعد
+            // ========================
+            // 🟢 إنشاء الموعد
+            // ========================
             $appointment = Appointment::create([
-                'doctor_id'           => $request->doctor_id,
+                'doctor_id'           => $doctor->id,
                 'patient_id'          => $patient->id,
                 'department_id'       => $department_id,
                 'offer_id'            => $offer->id ?? null,
                 'date'                => $request->date,
                 'slot_id'             => $request->slot_id,
-                'type'                => $request->request_type_id ===1 ?'check_up' : 'follow_up',
+                'type'                => $request->request_type_id === 1 ? 'check_up' : 'follow_up',
                 'with_medical_report' => $request->with_medical_report ?? false,
                 'specialization'      => $specialization,
-                'total_price'         => $finalPrice ?? $priceWithoutOffer,
-
+                'init_total_price'    => $finalPrice,
             ]);
         });
 
         return response()->json(['message' => 'Appointment booked successfully']);
     }
-
-
     public function getDoctorSchedule($doctorId)
     {
         $today = Carbon::today();

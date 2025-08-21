@@ -30,7 +30,8 @@ return new class extends Migration
             //$table->boolean('lab_tests')->default(false);
             $table->enum('type', ['check_up', 'follow_up']);
             $table->boolean('with_medical_report')->default(false);
-            $table->unsignedBigInteger('total_price')->nullable();
+            $table->unsignedBigInteger('init_total_price')->nullable();
+            $table->unsignedBigInteger('final_total_price')->nullable();
             $table->boolean('payment_status')->default(false);
 
 

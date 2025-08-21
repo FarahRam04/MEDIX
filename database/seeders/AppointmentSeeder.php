@@ -85,14 +85,14 @@ class AppointmentSeeder extends Seeder
                 if ($data['with_medical_report']) {
                     $total_price+=20000;
                 }
-                $data['total_price'] = $total_price;
+                $data['final_total_price'] = $total_price;
             }
             elseif ($data['type'] === 'follow_up') {
                 $total=25000;
                 if ($data['with_medical_report']) {
                     $total+=20000;
                 }
-                $data['total_price'] = $total;
+                $data['final_total_price'] = $total;
             }
 
             // إنشاء الموعد

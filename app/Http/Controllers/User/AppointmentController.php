@@ -52,7 +52,7 @@ class AppointmentController extends Controller
         $appointments=Appointment::with(['doctor','department','slot'])
             ->where('patient_id',$user->patient->id)
             ->where('payment_status', $status)
-            ->orderBy('date', 'desc')
+            ->orderBy('id', 'asc')
             ->get();
         $allData=[];
 
@@ -60,7 +60,7 @@ class AppointmentController extends Controller
             $data=[
                 'id' => $appointment->id,
                 'status' => $appointment->payment_status === 0 ? 'unpaid' : 'paid',
-                'total_price'=>$appointment->total_price,
+                'total_price'=>$appointment->final_total_price,
                 'currency' => 'SYP',
                 'doctor_name' => $appointment->doctor->employee->first_name . ' ' . $appointment->doctor->employee->last_name,
                 'department' => $appointment->department->name,
@@ -68,17 +68,23 @@ class AppointmentController extends Controller
                     $appointment->date . ' ' . optional($appointment->slot)->start_time
                 )->format('Y-m-d\TH:i:s')
             ];
-            if ($appointment->offer &&$appointment->offer->payment_method === 'points' && count($appointment->additional_costs)===0)
-                continue;
-            if ($appointment->offer &&$appointment->offer->payment_method === 'points' &&count($appointment->additional_costs) > 0 ){
-                $total_price=0;
-                foreach ($appointment->additional_costs as $additional_cost) {
-                    $total_price+=$additional_cost->price;
-                }
-                $data['total_price']=$total_price;
-            }
 
-               $allData[]=$data;
+            if ($appointment->offer && $appointment->offer->payment_method === 'points' && count($appointment->additional_costs)===0)
+                continue;
+
+            $total_price=$appointment->init_total_price;
+
+            if ( count($appointment->additional_costs) > 0) {
+                foreach ($appointment->additional_costs as $additional_cost) {
+                    $total_price += $additional_cost->price;
+                }
+            }
+                $appointment->final_total_price = $total_price;
+                $appointment->update();
+
+            $data['total_price']=$appointment->final_total_price;
+
+            $allData[]=$data;
 
 
         }
@@ -88,7 +94,11 @@ class AppointmentController extends Controller
     public function getBillDetails($bill_id)//bill_id == appointment_id
     {
         $user = auth()->user();
-        $appointment = Appointment::with('patient.user')->find($bill_id);
+        $appointment = Appointment::with('patient.user')
+            ->where('id', $bill_id)
+            ->where('patient_id',$user->patient->id)
+            ->first();
+
         if (!$appointment) {
             return response()->json(['error'=>'Bill Not Found .'], 404);
         }
@@ -96,35 +106,52 @@ class AppointmentController extends Controller
         $priceValue=$appointment->type === 'check_up' ?'50000 SYP' :'25000 SYP';
 
         $status=$appointment->payment_status === 0 ? 'Unpaid' : 'Paid';
+
+        $payment_method='Cash';
+        if ($appointment->offer && $appointment->offer->payment_method === 'points') {
+            $payment_method='Points';
+        }
         $data=[
             'Id'=> '# '.$appointment->id,
             'Status'=>$status,
             'Payment Date'=>$status=== 'Unpaid'?'----' :Carbon::today()->format('YFd'),
             'Payment Time'=>$status==='Unpaid'?'----': Carbon::now()->format('h:i A'),
-            'Payment Method'=>$appointment->total_price === 0 ?'Points' : 'Cash',
-            $priceKey=>$priceValue,
+            'Payment Method'=>$payment_method,
         ];
 
-        $total_price=$appointment->total_price;
-
-        if ($appointment->with_medical_report ){
-            $data['Medical Report Price']='20000 SYP';
-            $total_price+=20000;
+        $total_price=$appointment->final_total_price;
+        if ($appointment->offer === null || $appointment->offer && $appointment->offer->payment_method === 'cash') {
+            $data[$priceKey]=$priceValue;
+            if ($appointment->with_medical_report) {
+                $data['Medical Report Price'] = '20000 SYP';
+            }
         }
 
         $additional_costs=$appointment->additional_costs;
         if ($additional_costs){
             foreach ($additional_costs as &$additional_cost){
-                $additional_key=$additional_cost['title'].'Price';
+                $additional_key=$additional_cost['title'].' Price';
                 $additional_value=$additional_cost['price'];
                 $data[$additional_key]=$additional_value.' SYP';
-                $total_price+= $additional_value;
             }
-            $data['Total Price']=$total_price.' SYP';
-        }else{
-            $data['Total Price'] = $total_price.' SYP';
+
         }
 
+        if ($appointment->offer && $appointment->offer->payment_method === 'cash')
+        {
+            $before_dis= $appointment->type === 'check_up' ? 50000 : 25000;
+            if ($appointment->with_medical_report ){
+                $before_dis += 20000;
+            }
+            if ( count($appointment->additional_costs) > 0) {
+                foreach ($appointment->additional_costs as $additional_cost) {
+                    $before_dis += $additional_cost->price;
+                }
+            }
+
+            $data['Total Price Before Discount ']=$before_dis;
+        }
+        $data['Total Price']=$total_price.' SYP';
         return response()->json($data);
 
     }

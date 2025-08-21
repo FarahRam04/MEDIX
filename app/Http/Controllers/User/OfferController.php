@@ -13,12 +13,9 @@ class OfferController extends Controller
     public function offers()
     {
         $offers = Offer::all();
-
-        $offers->transform(function ($offer) {
-            $offer->image = url($offer->image); // تحويل المسار إلى رابط كامل
-            return $offer;
-        });
-
+        foreach ($offers as $offer) {
+            $offer->image = url('storage/'. $offer->image);
+        }
         return response()->json($offers, 200);
     }
 
