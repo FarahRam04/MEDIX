@@ -13,7 +13,9 @@ use Illuminate\Support\Facades\DB;
 
 class BookingPage extends Controller
 {
+
     public function departments(){
+        $data=[];
         $departments = Department::all();
         foreach($departments as $department){
             if ($department->id === 1){

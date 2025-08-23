@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Dashboard;
+use App\HelperFunctions;
 use App\Http\Requests\WritePrescriptionRequest;
 use App\Http\Resources\DoctorResource;
 use App\Http\Resources\HomeResource;
@@ -20,10 +21,12 @@ use App\Models\Doctor;
 use Illuminate\Http\Request;
 
 use App\Models\Medication;
+use Stichoza\GoogleTranslate\GoogleTranslate;
 
 
 class DoctorController extends Controller
 {
+    use HelperFunctions;
 
     public function index()
     {
@@ -54,8 +57,12 @@ class DoctorController extends Controller
 
     public function update(UpdateDoctorProfileRequest $request)
     {
-        // الحصول على الدكتور الحالي من الموظف المسجل
-        $doctor = Auth::user()->doctor; // يفترض أنه مستخدم ضمن Guard خاص بالموظفين
+        $tr=new GoogleTranslate();
+
+        $tr->setSource('en');
+        $tr->setTarget('ar');
+
+        $doctor = Auth::user()->doctor;
 
         if (!$doctor) {
             return response()->json(['message' => 'Doctor profile not found.'], 404);
@@ -65,31 +72,44 @@ class DoctorController extends Controller
         $department_id = $request->input('department_id', $doctor->department_id);
         $doctor->department_id = $department_id;
         $doctor->certificate = $request->input('certificate', $doctor->certificate);
+
         if ($request->input('qualifications')) {
             $existingQualifications = $doctor->qualifications->pluck('name')->toArray();
 
             foreach ($request->qualifications as $name) {
                 if (!in_array($name, $existingQualifications)) {
-                    $doctor->qualifications()->create(['name' => $name]);
+                    $q = $doctor->qualifications()->create([
+                        'name' => [
+                            'en' => $name,
+                            'ar' => $tr->translate($name),
+                        ]
+                    ]);
                     $existingQualifications[] = $name; // تحديث القائمة لتجنب التكرار داخل نفس الطلب
                 }
             }
         }
 
-        $doctor->bio=$request->input('bio', $doctor->bio);
+
+        $bio_en=$request->input('bio', $doctor->bio);
+        $bio_ar=$tr->translate($bio_en);
+
+        $doctor->setTranslation('bio','en',$bio_en);
+        $doctor->setTranslation('bio','ar',$bio_ar);
+
         $doctor->medical_license_number=$request->input('medical_license_number', $doctor->medical_license_number);
         $years_of_experience=$request->input('years_of_experience', $doctor->years_of_experience);
         $doctor->years_of_experience =$years_of_experience ;
 
 
-        $departmentSpecialists = [
-            1 => 'General Practitioner',
-            2 => 'Cardiologist',
-            3 => 'Dermatologist',
-            4 => 'Gastroenterologist',
-        ];
+        $departmentSpecialists=$this->getSpecialists();
 
-        $doctor->specialist = $departmentSpecialists[$department_id];
+        $sp_en= $departmentSpecialists[$department_id];
+        $sp_ar=$tr->translate($sp_en);
+
+        $doctor->setTranslation('specialist','en',$sp_en);
+        $doctor->setTranslation('specialist','ar',$sp_ar);
+
+        $doctor->save();
         // معالجة الصورة إن وُجدت
         if ($request->hasFile('image')) {
             // حذف الصورة القديمة إن وُجدت
@@ -239,7 +259,10 @@ class DoctorController extends Controller
 
 
         // 5. تحديث حالة الموعد
-        $appointment->status = 'completed';
+        $appointment->status = [
+            'en'=>'completed',
+            'ar'=>'مكتملة'
+        ];
         $appointment->doctor->number_of_treatments +=1;
         $appointment->doctor->save();
         $appointment->save();

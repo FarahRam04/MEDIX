@@ -5,19 +5,20 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Spatie\Translatable\HasTranslations;
 
 class Employee extends Authenticatable
 {
-    use HasRoles, HasApiTokens;
+    use HasRoles, HasApiTokens,HasTranslations;
 
+    public $translatable = ['first_name','last_name'];
     protected $guard_name = 'employee';
     protected $guarded = [];
     protected $hidden = ['password','created_at','updated_at'];
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'da
-            tetime',
+            'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }

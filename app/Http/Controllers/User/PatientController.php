@@ -201,14 +201,14 @@ class PatientController extends Controller
                 // تحقق من تطابق الدكتور
                 if ($offer->doctor_id !== (int) $request->doctor_id) {
                     throw ValidationException::withMessages([
-                        'doctor_id' => 'This doctor is not linked to the selected offer.',
+                        'doctor_id' => __('messages.doctor_offer'),
                     ]);
                 }
 
                 // تحقق من تطابق القسم
                 if ($offer->department_id !== (int) $request->department_id) {
                     throw ValidationException::withMessages([
-                        'department_id' => 'This department is not linked to the selected offer.',
+                        'department_id' => __('messages.department_offer'),
                     ]);
                 }
 
@@ -226,7 +226,7 @@ class PatientController extends Controller
                 } elseif ($offer->payment_method === 'points') {
                     if ($user->points < $offer->points_required) {
                         throw ValidationException::withMessages([
-                            'points' => 'Sorry, you do not have enough points to book this appointment.',
+                            'points' => __('messages.points'),
                         ]);
                     } else {
                         $finalPrice = 0;
@@ -244,7 +244,7 @@ class PatientController extends Controller
 
                 if ($doctor->department_id !== (int) $request->department_id) {
                     throw ValidationException::withMessages([
-                        'department_id' => 'This doctor does not work in that department',
+                        'department_id' => __('messages.department_doctor'),
                     ]);
                 }
 
@@ -275,7 +275,7 @@ class PatientController extends Controller
                 ->exists();
             if (!$exists) {
                 throw ValidationException::withMessages([
-                    'slot_id' => 'This time does not belong to this doctor',
+                    'slot_id' =>__('messages.slot_doctor'),
                 ]);
             }
             // 2. عدم وجود حجز مسبق لهذا الدكتور
@@ -285,7 +285,7 @@ class PatientController extends Controller
                 ->exists();
             if ($alreadyBooked) {
                 throw ValidationException::withMessages([
-                    'slot_id' => 'This time slot is already booked for this doctor',
+                    'slot_id' => __('messages.slot_booked'),
                 ]);
             }
 
@@ -296,7 +296,7 @@ class PatientController extends Controller
                 ->exists();
             if ($patientConflict) {
                 throw ValidationException::withMessages([
-                    'slot_id' => 'Book denied: you already have another appointment at this time.',
+                    'slot_id' => __('messages.slot_double'),
                 ]);
             }
 
@@ -310,7 +310,7 @@ class PatientController extends Controller
                 ->exists();
             if (!$doctorWorksThatDay) {
                 throw ValidationException::withMessages([
-                    'date' => 'The doctor does not work in this day',
+                    'date' => __('messages.date_doctor'),
                 ]);
             }
 
@@ -325,7 +325,7 @@ class PatientController extends Controller
 
                 if (!$visitedRecently) {
                     throw ValidationException::withMessages([
-                        'type' => 'You can only book a follow-up if you have visited this doctor within the last 15 days.',
+                      'type'=>__('messages.type')  ,
                     ]);
                 }
             }
@@ -336,6 +336,7 @@ class PatientController extends Controller
             // ========================
             // 🟢 إنشاء الموعد
             // ========================
+
             $appointment = Appointment::create([
                 'doctor_id'           => $doctor->id,
                 'patient_id'          => $patient->id,
@@ -347,10 +348,16 @@ class PatientController extends Controller
                 'with_medical_report' => $request->with_medical_report ?? false,
                 'specialization'      => $specialization,
                 'init_total_price'    => $finalPrice,
+                'status'              =>[
+                'en' => "pending",
+                'ar' => "قيد الانتظار",
+            ]
             ]);
+
+
         });
 
-        return response()->json(['message' => 'Appointment booked successfully']);
+        return response()->json(['message' =>__('messages.booked')]);
     }
     public function getDoctorSchedule($doctorId)
     {

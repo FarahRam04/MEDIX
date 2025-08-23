@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Translatable\HasTranslations;
 
 class Appointment extends Model
 {
-    use HasApiTokens;
+    use HasApiTokens,HasTranslations;
     protected $guarded=[];
 
+    public $translatable = ['status'];
     public function doctor(){
         return $this->belongsTo(Doctor::class);
     }

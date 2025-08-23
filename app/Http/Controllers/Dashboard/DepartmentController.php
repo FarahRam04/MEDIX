@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\DepartmentResource;
 use App\Models\Department;
 use Illuminate\Http\Request;
+use Stichoza\GoogleTranslate\GoogleTranslate;
 
 class DepartmentController extends Controller
 {
@@ -29,7 +30,18 @@ class DepartmentController extends Controller
         $validated=$request->validate([
             'name' => 'required|unique:departments,name',
         ]);
-        $department = Department::create($validated);
+        $tr= new GoogleTranslate();
+        $tr->setSource('en');
+        $tr->setTarget('ar');
+
+        $en_name=$request->name;
+        $ar_name=$tr->translate($en_name);
+        $department = Department::create([
+            'name'=>[
+                'en' =>$en_name ,
+                'ar' =>$ar_name ,
+            ]
+        ]);
 
         return response()->json([
             'message' => 'Department created successfully.',

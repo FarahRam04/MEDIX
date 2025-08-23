@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\HelperFunctions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminAndEmployee\AddEmployeeRequest;
 use App\Http\Requests\AdminAndEmployee\UpdateEmployeeRequest;
@@ -9,9 +10,10 @@ use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-
+use Stichoza\GoogleTranslate\GoogleTranslate;
 class EmployeeController extends Controller
 {
+    use HelperFunctions;
     /**
      * Display a listing of the resource.
      */
@@ -46,19 +48,39 @@ class EmployeeController extends Controller
         $fullName = $request->first_name . ' ' . $request->last_name;
 
         Mail::raw("Hello $fullName,
-Your account has been successfully created in the MEDIX Clinic.
-Here are your temporary login credentials:
-Temporary Password: $tempPassword
-Please log in using your email and this password.
-Best regards,
-System Administration", function ($message) use ($request, $fullName) {
+            Your account has been successfully created in the MEDIX Clinic.
+            Here are your temporary login credentials:
+            Temporary Password: $tempPassword
+            Please log in using your email and this password.
+            Best regards,
+            System Administration",
+            function ($message) use ($request, $fullName) {
             $message->to($request->email)->subject("Your Login Details - $fullName");
         });
+        $tr=new GoogleTranslate();
 
+        $tr->setSource('en');
+        $tr->setTarget('ar');
+
+        $first_name_en=$request->first_name;
+        $last_name_en=$request->last_name;
+
+        $first_name_ar=$tr->translate($first_name_en);
+        $last_name_ar=$tr->translate($last_name_en);
+
+        $employee->setTranslation('first_name','en',$first_name_en);
+        $employee->setTranslation('first_name','ar',$first_name_ar);
+
+        $employee->setTranslation('last_name','en',$last_name_en);
+        $employee->setTranslation('last_name','ar',$last_name_ar);
+
+
+        $employee->save();
 
         return response()->json([
             'message' => 'Employee added successfully,and login details sent via email.',
             'role' => $employee->getRoleNames()->first(),
+            'employee' => $employee,
         ],200);
     }
 
@@ -116,4 +138,7 @@ System Administration", function ($message) use ($request, $fullName) {
             'employee'=> $employee
             ],200);
     }
+
+
+
 }
