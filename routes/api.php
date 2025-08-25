@@ -6,11 +6,13 @@ use App\Http\Controllers\Api\ForgetPasswordWhatsappController;
 use App\Http\Controllers\Api\ForgotPasswordEmailController;
 use App\Http\Controllers\Api\ResetPasswordEmailController;
 use App\Http\Controllers\Api\ResetPasswordWhatsappController;
+use App\Http\Controllers\Dashboard\AAppointmentController;
 use App\Http\Controllers\Dashboard\AdminAndEmployeeAuth;
 use App\Http\Controllers\Dashboard\DepartmentController;
 use App\Http\Controllers\Dashboard\DoctorController;
 use App\Http\Controllers\Dashboard\EmployeeController;
 use App\Http\Controllers\Dashboard\OOfferController;
+use App\Http\Controllers\Dashboard\PPatientController;
 use App\Http\Controllers\Dashboard\SalaryController;
 use App\Http\Controllers\Dashboard\TimeController;
 use App\Http\Controllers\Dashboard\VacationController;
@@ -100,6 +102,9 @@ Route::middleware(['auth:sanctum','is_admin'])->group(function () {
         Route::delete('/employee/destroy/{id}', 'destroy');
     });
 
+    Route::put('/doctors/{id}/assign-details', [DoctorController::class, 'assignDepartmentAndSpecialty']);
+
+
     Route::controller(TimeController::class)->group(function (){
         Route::get('/working_details', 'index');
         Route::post('/working_details', 'store');
@@ -164,6 +169,23 @@ Route::middleware(['auth:sanctum','is_doctor'])->group(function () {
 
 });
 
+Route::middleware(['auth:sanctum', 'is_admin_or_receptionist'])->group(function () {
+    Route::get('/dashboard/appointments', [AAppointmentController::class, 'index']);
+});
+//routes only for reception
+Route::middleware(['auth:sanctum','is_receptionist'])->group(function () {
+    Route::post('/dashboard/patients/register', [PPatientController::class, 'registerPatient']);
+    Route::get('/dashboard/patients/search', [PPatientController::class, 'search']);
+    //reservations crud----------->
+    Route::post('/dashboard/appointment/create', [AAppointmentController::class, 'store']);
+    Route::put('/dashboard/appointment/{id}/update', [AAppointmentController::class, 'update']);
+    Route::get('/dashboard/appointment/{id}/show', [AAppointmentController::class, 'show']);
+    Route::delete('/dashboard/appointment/{id}/delete', [AAppointmentController::class, 'destroy']);
+/////عرض اطباء لقسم معين
+    Route::get('/dashboard/doctors-by-department', [AAppointmentController::class, 'getDoctorsByDepartment']);
+
+
+});
 //WhatsApp
 Route::post('/send-code',[WhatsAppController::class, 'code']);//send whatsapp verification code
 Route::post('/verify-code',[WhatsAppController::class, 'verify']);

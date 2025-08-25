@@ -47,7 +47,7 @@ class EmployeeSeeder extends Seeder
                 $doctor = Employee::create([
                     'first_name' => $firstName,
                     'last_name' => $lastName,
-                    'email' => "doctor{$doctorIndex}@example.com",
+                    'email' => "heba.doc.200{$doctorIndex}@gmail.com",
                     'password' => Hash::make('password'),
                     'role' => 'doctor',
                     'salary' => 5000 + $doctorIndex * 100,
@@ -102,11 +102,11 @@ class EmployeeSeeder extends Seeder
             }
         }
 
-        for ($j = 1; $j <= 4; $j++) {
+        for ($j = 1; $j <= 8; $j++) {
             $receptionist = Employee::create([
                 'first_name' => "ReceptionistFirst$j",
                 'last_name' => "ReceptionistLast$j",
-                'email' => "receptionist$j@example.com",
+                'email' => "hebaxxg$j@gmail.com",
                 'password' => Hash::make('password'),
                 'role' => 'receptionist',
                 'salary' => 3000 + $j * 100,

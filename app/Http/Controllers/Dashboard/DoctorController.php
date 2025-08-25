@@ -25,10 +25,51 @@ use App\Models\Medication;
 class DoctorController extends Controller
 {
 
-    public function index()
+    public function assignDepartmentAndSpecialty(Request $request, $id)
     {
-        return response()->json(Doctor::with('employee','department')->get(),200);
+        $doctor = Doctor::find($id);
+        if (!$doctor) {
+            return response()->json(['message' => 'Doctor not found.'], 404);
+        }
+
+        $validatedData = $request->validate([
+            'department_id' => 'required|exists:departments,id',
+            'specialist'    => 'required|string|max:255',
+        ]);
+
+        $doctor->department_id = $validatedData['department_id'];
+        $doctor->specialist = $validatedData['specialist'];
+        $doctor->save();
+
+        return response()->json([
+            'message' => 'Doctor\'s department and specialty have been updated successfully.',
+            'doctor' => $doctor
+        ]);
     }
+
+
+    public function index(Request $request)
+    {
+
+        $query = Doctor::with('employee');
+
+        if ($request->has('department_id')) {
+            $query->where('department_id', $request->department_id);
+        }
+        $doctors = $query->get();
+
+        $formattedDoctors = $doctors->map(function ($doctor) {
+            return [
+                'id' => $doctor->id,
+                'name' => $doctor->employee->first_name . ' ' . $doctor->employee->last_name,
+                'department_id' => $doctor->department_id // (اختياري، قد تحتاجه الواجهة)
+            ];
+        });
+
+        // 5. إرجاع الرد كـ JSON
+        return response()->json($formattedDoctors);
+
+}
 
     /**
      * Store a newly created resource in storage.

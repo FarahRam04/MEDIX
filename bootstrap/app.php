@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Middleware\CheckAdminOrReceptionist;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\EnsureUserIsDoctor;
 use App\Http\Middleware\EnsureUserIsEmployee;
+use App\Http\Middleware\EnsureUserIsReceptionist;
 use App\Http\Middleware\is_user;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -26,6 +28,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'is_employee'=>EnsureUserIsEmployee::class,
             'is_user'=> is_user::class,
             'is_doctor'=>EnsureUserIsDoctor::class,
+            'is_receptionist'=>EnsureUserIsReceptionist::class,
+            'is_admin_or_receptionist' => CheckAdminOrReceptionist::class,
+
             ]);
 
         //
