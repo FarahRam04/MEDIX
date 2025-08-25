@@ -38,16 +38,20 @@ Route::get('/user', function (Request $request) {
 Route::post('/user_register',[UserControllerAuth::class,'register']);
 Route::post('/user_login',[UserControllerAuth::class,'login']);
 
+//routes for all
+
 Route::get('/offers',[OfferController::class,'offers']);
 Route::get('/offer/{id}',[BookingPage::class,'offerDays']);
 Route::get('/offer_price',[OfferController::class,'offerPrice']);
+
+Route::get('/doctors',[DoctorController::class, 'index']);
+Route::get('/doctors/{id}',[DoctorController::class, 'show']);
 
 Route::get('/departments',[BookingPage::class, 'departments']);//get all departments
 Route::get('/default_days',[BookingPage::class, 'getNextFiveDays']);//get default days
 Route::get('/default_times',[BookingPage::class, 'getSlotsByRange']);//default morning and afternoon times
 Route::get('/department/{id}',[BookingPage::class, 'getDepartmentAvailability']);
 Route::get('/availableSlotsByShift',[BookingPage::class, 'getShiftSlotsWithDoctor']);
-Route::get('/doctors/{id}',[DoctorController::class, 'show']);///////////this need a resource to design the response///////////////
 Route::get('/appointments/{id}/can_cancel',[AppointmentController::class, 'canCancelAppointment']);
 Route::get('/appointments/{id}',[AppointmentController::class, 'show']);//get an appointment details
 
@@ -148,7 +152,7 @@ Route::middleware(['auth:sanctum','is_admin'])->group(function () {
 
 
     Route::get('/users',[UserController::class, 'index']);//get all users
-    Route::get('/doctors',[DoctorController::class, 'index']);//get all doctors with all relationships
+
 
 
 });
@@ -165,6 +169,7 @@ Route::middleware(['auth:sanctum','is_employee'])->group(function () {
 Route::middleware(['auth:sanctum','is_doctor'])->group(function () {
     Route::post('/update_profile',[DoctorController::class, 'update']);
     Route::post('/prescription/{id}',[DoctorController::class, 'writePrescription']);
+    Route::post('/appointments/{id}/upload-report', [DoctorController::class, 'uploadMedicalReport']);
 
 
 });

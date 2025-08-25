@@ -28,6 +28,7 @@ return new class extends Migration
 
             $table->enum('type', ['check_up', 'follow_up']);
             $table->boolean('with_medical_report')->default(false);
+            $table->string('medical_report_path')->nullable();
             $table->unsignedBigInteger('init_total_price')->nullable();
             $table->unsignedBigInteger('final_total_price')->nullable();
             $table->boolean('payment_status')->default(false);

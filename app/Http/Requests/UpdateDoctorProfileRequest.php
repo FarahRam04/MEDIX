@@ -22,12 +22,14 @@ class UpdateDoctorProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'department_id' => 'nullable|exists:departments,id',
-            'certificate'=>'nullable|string',
-            'qualifications' => 'sometimes|array',
-            'years_of_experience'=>'nullable|numeric',
-            'image'=>'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'bio'=>'required|string',
+                'certificate'            => 'nullable|string|max:255',
+                'medical_license_number' => 'nullable|string|max:255',
+                'bio'                    => 'nullable|string',
+                'years_of_experience'    => 'nullable|integer|min:0',
+                'image'                  => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'qualifications'         => 'nullable|array',
+                'qualifications.*'       => 'string|max:255', // كل عنصر في المصفوفة يجب أن يكون نصاً
+
         ];
     }
 }

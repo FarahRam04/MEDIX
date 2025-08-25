@@ -14,7 +14,7 @@ use App\Models\Surgery;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-
+use App\Services\NotificationService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateDoctorProfileRequest;
 use App\Models\Doctor;
@@ -25,6 +25,7 @@ use Stichoza\GoogleTranslate\Exceptions\LargeTextException;
 use Stichoza\GoogleTranslate\Exceptions\RateLimitException;
 use Stichoza\GoogleTranslate\Exceptions\TranslationRequestException;
 use Stichoza\GoogleTranslate\GoogleTranslate;
+use function Pest\Laravel\json;
 
 
 class DoctorController extends Controller
@@ -33,25 +34,30 @@ class DoctorController extends Controller
 
     public function assignDepartmentAndSpecialty(Request $request, $id)
     {
-        $doctor = Doctor::find($id);
+        $doctor = Doctor::with(['employee', 'department'])->find($id);
         if (!$doctor) {
             return response()->json(['message' => 'Doctor not found.'], 404);
         }
-
         $validatedData = $request->validate([
             'department_id' => 'required|exists:departments,id',
             'specialist'    => 'required|string|max:255',
         ]);
-
         $doctor->department_id = $validatedData['department_id'];
         $doctor->specialist = $validatedData['specialist'];
         $doctor->save();
+        $doctor->load('department');
 
         return response()->json([
             'message' => 'Doctor\'s department and specialty have been updated successfully.',
-            'doctor' => $doctor
+            'doctor' => [
+                'id'          => $doctor->id,
+                'name'        => optional($doctor->employee)->first_name . ' ' . optional($doctor->employee)->last_name,
+                'department'  => optional($doctor->department)->name,
+                'specialist'  => $doctor->specialist,
+            ]
         ]);
     }
+
 
 
     public function index(Request $request)
@@ -64,34 +70,24 @@ class DoctorController extends Controller
         }
         $doctors = $query->get();
 
-        $formattedDoctors = $doctors->map(function ($doctor) {
-            return [
-                'id' => $doctor->id,
-                'name' => $doctor->employee->first_name . ' ' . $doctor->employee->last_name,
-                'department_id' => $doctor->department_id // (اختياري، قد تحتاجه الواجهة)
-            ];
-        });
-
-        // 5. إرجاع الرد كـ JSON
-        return response()->json($formattedDoctors);
+        return DoctorResource::collection($doctors);
 
 }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        //
-    }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
-        $doctor=Doctor::with('employee','department')->findOrFail($id);
-        return response()->json($doctor,200);
+        $doctor=Doctor::with('employee','department')->find($id);
+        if(!$doctor){
+            return  response()->json(['message'=>'Doctor not found.'],200);
+
+        }
+
+        return response()->json(['message'=>'Doctor details retrieved successfully',
+            'doctor'=>new DoctorResource($doctor)],200);
     }
 
     /**
@@ -99,84 +95,55 @@ class DoctorController extends Controller
      */
 
 
-    public function update(UpdateDoctorProfileRequest $request)
+    public function update(Request $request)
     {
-        $tr=new GoogleTranslate();
-
-        $tr->setSource('en');
-        $tr->setTarget('ar');
-
+        // 1. جلب الطبيب المرتبط بالمستخدم المسجل دخوله
         $doctor = Auth::user()->doctor;
 
         if (!$doctor) {
             return response()->json(['message' => 'Doctor profile not found.'], 404);
         }
 
-        // تحديث البيانات المطلوبة فقط
-        $department_id = $request->input('department_id', $doctor->department_id);
-        $doctor->department_id = $department_id;
-        $doctor->certificate = $request->input('certificate', $doctor->certificate);
+        $validatedData = $request->validate([
+            'certificate'            => 'nullable|string|max:255',
+            'medical_license_number' => 'nullable|string|max:255',
+            'bio'                    => 'nullable|string',
+            'years_of_experience'    => 'nullable|integer|min:0',
+            'image'                  => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
+            'qualifications'         => 'nullable|array',
+            'qualifications.*'       => 'string|max:255', // كل عنصر في المصفوفة يجب أن يكون نصاً
+        ]);
 
-        if ($request->input('qualifications')) {
-            $existingQualifications = $doctor->qualifications->pluck('name')->toArray();
+        $doctor->fill($request->only([
+            'certificate',
+            'medical_license_number',
+            'bio',
+            'years_of_experience'
+        ]));
 
+
+        if ($request->has('qualifications')) {
+
+            $doctor->qualifications()->delete();
             foreach ($request->qualifications as $name) {
-                if (!in_array($name, $existingQualifications)) {
-                    $q = $doctor->qualifications()->create([
-                        'name' => [
-                            'en' => $name,
-                            'ar' => $tr->translate($name),
-                        ]
-                    ]);
-                    $existingQualifications[] = $name; // تحديث القائمة لتجنب التكرار داخل نفس الطلب
-                }
+                $doctor->qualifications()->create(['name' => $name]);
             }
         }
 
-
-        $bio_en=$request->input('bio', $doctor->bio);
-        $bio_ar=$tr->translate($bio_en);
-
-        $doctor->setTranslation('bio','en',$bio_en);
-        $doctor->setTranslation('bio','ar',$bio_ar);
-
-        $doctor->medical_license_number=$request->input('medical_license_number', $doctor->medical_license_number);
-        $years_of_experience=$request->input('years_of_experience', $doctor->years_of_experience);
-        $doctor->years_of_experience =$years_of_experience ;
-
-
-        $departmentSpecialists=$this->getSpecialists();
-
-        $sp_en= $departmentSpecialists[$department_id];
-        $sp_ar=$tr->translate($sp_en);
-
-        $doctor->setTranslation('specialist','en',$sp_en);
-        $doctor->setTranslation('specialist','ar',$sp_ar);
-
-        $doctor->save();
-        // معالجة الصورة إن وُجدت
         if ($request->hasFile('image')) {
-            // حذف الصورة القديمة إن وُجدت
-            if ($doctor->image && Storage::exists($doctor->image)) {
-                Storage::delete($doctor->image);
+            if ($doctor->image && Storage::disk('public')->exists($doctor->image)) {
+                Storage::disk('public')->delete($doctor->image);
             }
 
-            // رفع الصورة الجديدة وتحديث المسار
-            $imagePath = $request->file('image')->store('doctors', 'public');
-            $doctor->image = $imagePath;
+            $doctor->image = $request->file('image')->store('doctors', 'public');
         }
-
-        /////////////Rating
-        $doctor->initial_rating=Doctor::getInitialRatingFromExperience($doctor->years_of_experience);
-        $doctor->rating_votes = 0;
-        $doctor->rating_total = 0;
-        $doctor->final_rating = $doctor->initial_rating;
         $doctor->save();
 
-        return response()->json(['message' => 'Profile updated successfully.', 'doctor' => $doctor->load('department','employee','qualifications')], 200);
-
-    }
-    // إضافة تقييم جديد لدكتور
+        $doctor->load('employee', 'department', 'qualifications');
+        return response()->json([
+            'message' => 'Profile updated successfully.',
+            'doctor' => new DoctorResource($doctor)
+        ], 200);}
 
     public function rate(Request $request)
     {
@@ -242,113 +209,90 @@ class DoctorController extends Controller
         }
 
         // 2. تحقق من أن الطبيب الحالي هو صاحب الموعد
-        $employee = Auth::user();
-
-        $doctor = DB::table('doctors')
-            ->where('employee_id', $employee->id)
-            ->first();
-
-        if ($appointment->doctor_id !== $doctor->id) {
-            return response()->json([
-                'message' => 'this appointment does not related to this doctor',
-                'appointment->doctor_id'=>$appointment->doctor_id,
-                'token->doctor_id'=>$doctor->id
-            ], 403);
-
+        $doctor = Auth::user()->doctor;
+        if (!$doctor||$appointment->doctor_id !== $doctor->id) {
+            return response()->json(['message' => 'You are not authorized to write a prescription for this appointment.'], 403);
         }
 
         // 3. تحقق من أن الحالة pending
         if ($appointment->status !== 'pending') {
-            return response()->json(['message' => 'You can not write a prescription for a pending appointment'], 400);
+            return response()->json(['message' => 'You can not write a prescription for a completed appointment'], 400);
+        }
+        try {
+
+            DB::transaction(function () use ($request, $appointment) {
+
+                $tr = new GoogleTranslate();
+                $tr->setSource('en');
+                $tr->setTarget('ar');
+
+                if ($request->has('medications')) {
+                    foreach ($request->medications as $med) {
+                        Medication::create([
+                            'appointment_id' => $appointment->id,
+                            'name' => ['en' => $med['name'], 'ar' => $tr->translate($med['name'])],
+                            'type' => ['en' => $med['type'], 'ar' => $tr->translate($med['type'])],
+                            'dosage' => ['en' => $med['dosage'], 'ar' => $tr->translate($med['dosage'])],
+                            'frequency' => ['en' => $med['frequency'], 'ar' => $tr->translate($med['frequency'])],
+                            'duration' => ['en' => $med['duration'], 'ar' => $tr->translate($med['duration'])],
+                            'note' => ['en' => $med['note'], 'ar' => $tr->translate($med['note'])],
+                        ]);
+                    }
+                }
+
+                if ($request->has('lab_tests')) {
+                    foreach ($request->lab_tests as $labTest) {
+                        LabTest::create([
+                            'appointment_id' => $appointment->id,
+                            'name' => ['en' => $labTest, 'ar' => $tr->translate($labTest)]
+                        ]);
+                    }
+                }
+
+                if ($request->has('surgeries')) {
+                    foreach ($request->surgeries as $surgery) {
+                        Surgery::create([
+                            'appointment_id' => $appointment->id,
+                            'name' => ['en' => $surgery, 'ar' => $tr->translate($surgery)]
+                        ]);
+                    }
+                }
+
+
+                if ($request->has('advices')) {
+                    foreach ($request->advices as $advice) {
+                        Advice::create([
+                            'appointment_id' => $appointment->id,
+                            'advice' => ['en' => $advice, 'ar' => $tr->translate($advice)]
+                        ]);
+                    }
+                }
+
+
+                $appointment->setTranslation('status', 'en', 'completed');
+                $appointment->setTranslation('status', 'ar', 'مكتمل');
+                $appointment->save();
+                $appointment->doctor->increment('number_of_treatments');
+
+
+                $patientUser = $appointment->patient->user;
+                if ($patientUser && $patientUser->fcm_token) {
+
+                    $notificationService = app(NotificationService::class);
+
+                    $title = 'زيارتك اكتملت';
+                    $body ='وصفتك ومعلوماتك الطبية أصبحت متاحة.يرجى المراجعة.';
+                    $type = 'prescription';
+                    $notificationService->sendFCMNotification($patientUser->fcm_token, $title, $body, $type);
+                }
+            });
+
+        } catch (\Exception $e) {
+            // في حال فشل أي عملية داخل الـ transaction
+            return response()->json(['message' => 'An error occurred while saving the prescription.', 'error' => $e->getMessage()], 500);
         }
 
-        $tr=new GoogleTranslate();
-        $tr->setSource('en');
-        $tr->setTarget('ar');
-        // 4. تخزين الأدوية
-        $medications = $request->input('medications');
-
-        if (is_array($medications)) {
-            foreach ($medications as $med) {
-                Medication::create([
-                    'appointment_id' => $appointment->id,
-                    'name' => [
-                        'en'=>$med['name'],
-                        'ar'=>$tr->translate($med['name'])
-                    ],
-                    'type' => [
-                        'en'=>$med['type'],
-                        'ar'=>$tr->translate($med['type'])
-                    ],
-                    'dosage' =>[
-                        'en'=>$med['dosage'],
-                        'ar'=>$tr->translate($med['dosage'])
-                    ],
-                    'frequency' => [
-                        'en'=>$med['frequency'],
-                        'ar'=>$tr->translate($med['frequency'])
-                    ],
-                    'duration' => [
-                        'en'=>$med['duration'],
-                        'ar'=>$tr->translate($med['duration'])
-                    ],
-                    'note' => [
-                        'en'=>$med['note'],
-                        'ar'=>$tr->translate($med['note'])],
-                ]);
-            }
-        }
-        $labTests = $request->input('lab_tests');
-        if (is_array($labTests)) {
-            foreach ($labTests as $labTest) {
-                LabTest::create([
-                    'appointment_id' => $appointment->id,
-                    'name'=>[
-                        'en'=>$labTest,
-                        'ar'=>$tr->translate($labTest)
-                    ]
-                ]);
-            }
-        }
-
-        $surgeries=$request->input('surgeries');
-        if (is_array($surgeries)) {
-            foreach ($surgeries as $sur) {
-                Surgery::create([
-                    'appointment_id' => $appointment->id,
-                    'name'=>[
-                        'en'=>$sur,
-                        'ar'=>$tr->translate($sur)
-                    ]
-                ]);
-            }
-        }
-        $advices=$request->input('advices');
-        if (is_array($advices)) {
-            foreach ($advices as $ad) {
-                Advice::create([
-                    'appointment_id' => $appointment->id,
-                    'advice'=>[
-                        'en'=>$ad,
-                        'ar'=>$tr->translate($ad)
-                        ]
-                ]);
-            }
-        }
-
-
-        // 5. تحديث حالة الموعد
-        $appointment->status = [
-            'en'=>'completed',
-            'ar'=>'مكتملة'
-        ];
-        $appointment->doctor->number_of_treatments +=1;
-        $appointment->doctor->save();
-        $appointment->save();
-
-        return response()->json([
-            'message' => 'تم حفظ الوصفة وتحديث حالة الموعد',
-        ], 200);
+        return response()->json(['message' => 'Prescription saved and appointment status updated successfully.'], 200);
     }
 
     public function getPrescription(string $id)
@@ -477,6 +421,56 @@ class DoctorController extends Controller
     }
 
 
+
+    public function uploadMedicalReport(Request $request, $id)
+    {
+
+        $request->validate([
+            'medical_report' => 'required|file|mimes:pdf,jpg,png|max:5120', // هنا الملف مطلوب
+        ]);
+
+        $appointment = Appointment::find($id);
+        if (!$appointment) {
+            return response()->json(['message' => 'Appointment not found.'], 404);
+        }
+
+        $doctor = Auth::user()->doctor;
+        if ($appointment->doctor_id !== $doctor->id) {
+            return response()->json(['message' => 'You are not authorized for this appointment.'], 403);
+        }
+
+
+        if (!$appointment->with_medical_report) {
+            return response()->json(['message' => 'A medical report was not requested for this appointment.'], 400);
+        }
+
+
+        try {
+
+            if ($appointment->medical_report_path && Storage::disk('public')->exists($appointment->medical_report_path)) {
+                Storage::disk('public')->delete($appointment->medical_report_path);
+            }
+
+            $path = $request->file('medical_report')->store('medical_reports', 'public');
+            $appointment->medical_report_path = $path;
+            $appointment->save();
+            $patientUser = $appointment->patient->user;
+            if ($patientUser && $patientUser->fcm_token) {
+                $notificationService = app(NotificationService::class);
+                $title = 'التقرير الطبي متاح';
+                $body = 'تقريرك الطبي رفع وأصبح متاح .';
+                $notificationService->sendFCMNotification($patientUser->fcm_token, $title, $body, 'report');
+            }
+
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to upload report.', 'error' => $e->getMessage()], 500);
+        }
+
+        return response()->json([
+            'message' => 'Medical report uploaded successfully.',
+            'report_url' => Storage::disk('public')->url($appointment->medical_report_path)
+        ], 200);
+    }
 
 
 
