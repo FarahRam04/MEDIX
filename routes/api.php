@@ -221,3 +221,7 @@ Route::post('password/reset/whatsapp', ResetPasswordWhatsappController::class);
 
 Route::post('/refresh_token',[UserControllerAuth::class,'refreshToken'])->middleware('auth:sanctum');
 Route::post('/firebase/send', [NotificationService::class, 'send']);
+
+
+////////////
+Route::get('/num',[DoctorController::class,'num']);

@@ -10,27 +10,31 @@ use App\Models\Offer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class BookingPage extends Controller
 {
-    public function departments(){
+
+    public function departments()
+    {
+        $data = [];
         $departments = Department::all();
-        foreach($departments as $department){
-            if ($department->id === 1){
+        foreach ($departments as $department) {
+            if ($department->id === 1) {
                 continue;
             }
-            $morningDoctors=0;
-            $afternoonDoctors=0;
-            $doctors=$department->doctors;
-            foreach($doctors as $doctor){
-               $time=$doctor->employee->time;
-               $time->start_time ==='09:00:00' ? $morningDoctors++ : $afternoonDoctors++ ;
+            $morningDoctors = 0;
+            $afternoonDoctors = 0;
+            $doctors = $department->doctors;
+            foreach ($doctors as $doctor) {
+                $time = $doctor->employee->time;
+                $time->start_time === '09:00:00' ? $morningDoctors++ : $afternoonDoctors++;
             }
-            $data[]=[
-                'id'=>$department->id,
-                'name'=>$department->name,
-                'morning_Doctors_Count'=>$morningDoctors,
-                'afternoon_Doctors_Count'=>$afternoonDoctors,
+            $data[] = [
+                'id' => $department->id,
+                'name' => $department->name,
+                'morning_Doctors_Count' => $morningDoctors,
+                'afternoon_Doctors_Count' => $afternoonDoctors,
             ];
         }
         return response()->json($data);
@@ -73,6 +77,7 @@ class BookingPage extends Controller
 
         return response()->json($result);
     }
+
     public function offerDays($offerId)
     {
         $offer = Offer::find($offerId);
@@ -84,14 +89,14 @@ class BookingPage extends Controller
         $end = Carbon::parse($offer->end_date)->startOfDay();
 
         $response = $this->getNextFiveDays();
-        $days=$response->getData(true);
+        $days = $response->getData(true);
 
-        $doctorDaysIds=$offer->doctor->employee->time->days->pluck('id')->toArray();
+        $doctorDaysIds = $offer->doctor->employee->time->days->pluck('id')->toArray();
         foreach ($days as &$day) {
             $date = Carbon::parse($day['day'])->startOfDay();
 
-            if ($date->between($start, $end) &&in_array($date->dayOfWeek,$doctorDaysIds)){
-                $day['isAvailable']=true;
+            if ($date->between($start, $end) && in_array($date->dayOfWeek, $doctorDaysIds)) {
+                $day['isAvailable'] = true;
             }
         }
 
@@ -115,6 +120,14 @@ class BookingPage extends Controller
                 ->where('employees.role', 'doctor')
                 ->where('doctors.department_id', $department_id)
                 ->where('day_time.day_id', $dayId)
+                ->whereNotExists(function ($query) use ($date) {
+                    $query->select(DB::raw(1))
+                        ->from('vacations')
+                        ->whereColumn('vacations.employee_id', 'employees.id')
+                        ->where('vacations.status', 'active')
+                        ->where('vacations.start_day', '<=', $date->toDateString())
+                        ->where('vacations.end_day', '>', $date->toDateString());
+                })
                 ->exists();
         }
 
@@ -123,8 +136,8 @@ class BookingPage extends Controller
 
     public function getDaysRelatedToDoctor($doctor_id)
     {
-        $doctor=Doctor::find($doctor_id);
-        if (! $doctor){
+        $doctor = Doctor::find($doctor_id);
+        if (!$doctor) {
             return response()->json(['error' => 'Doctor not found'], 404);
         }
         $response = $this->getNextFiveDays();
@@ -132,9 +145,14 @@ class BookingPage extends Controller
         foreach ($daysData as &$day) {
             $date = Carbon::parse($day['day']);
             $dayId = $date->dayOfWeek;
-            $doctorDays=$doctor->employee->time->days->pluck('id')->toArray();
-            if (in_array($dayId, $doctorDays)){
-                $day['isAvailable']=true;
+            $doctorDays = $doctor->employee->time->days->pluck('id')->toArray();
+            $hasVacation = $doctor->employee->vacations()
+                ->where('status', 'active')
+                ->where('start_day', '<=', $date->toDateString())
+                ->where('end_day', '>', $date->toDateString())
+                ->exists();
+            if (in_array($dayId, $doctorDays) && !$hasVacation) {
+                $day['isAvailable'] = true;
             }
         }
 
@@ -151,7 +169,7 @@ class BookingPage extends Controller
 
         $departmentId = $request->department_id;
         $date = Carbon::parse($request->date);
-        $dayId = $date->dayOfWeek; // 0 = الأحد، 6 = السبت
+        $dayId = $date->dayOfWeek;
 
         $slotRange = $request->shift === 'morning'
             ? range(1, 8)
@@ -160,17 +178,14 @@ class BookingPage extends Controller
         $shiftStart = $request->shift === 'morning' ? '09:00:00' : '14:00:00';
         $shiftEnd = $request->shift === 'morning' ? '13:00:00' : '18:00:00';
 
-        // جلب الدكتور الذي يعمل في هذا القسم وبهذا اليوم وضمن الشيفت
-        $doctor = DB::table('doctors')
-            ->join('employees', 'employees.id', '=', 'doctors.employee_id')
-            ->join('times', 'times.employee_id', '=', 'employees.id')
-            ->join('day_time', 'day_time.time_id', '=', 'times.id')
-            ->where('employees.role', 'doctor')
-            ->where('doctors.department_id', $departmentId)
-            ->where('day_time.day_id', $dayId)
-            ->where('times.start_time', $shiftStart)
-            ->where('times.end_time', $shiftEnd)
-            ->select('doctors.id as doctor_id')
+        // جلب الدكتور باستخدام موديل Eloquent مع العلاقات
+        $doctor = Doctor::with(['employee.vacations'])
+            ->where('department_id', $departmentId)
+            ->whereHas('employee.time.days', function ($query) use ($dayId, $shiftStart, $shiftEnd) {
+                $query->where('day_id', $dayId)
+                    ->where('times.start_time', $shiftStart)
+                    ->where('times.end_time', $shiftEnd);
+            })
             ->first();
 
         if (!$doctor) {
@@ -181,36 +196,46 @@ class BookingPage extends Controller
         }
 
         // جلب الـ slots المرتبطة بهذا الدكتور
-        $doctorSlots = DB::table('available_slot_doctor')
-            ->where('doctor_id', $doctor->doctor_id)
-            ->whereIn('available_slot_id', $slotRange)
-            ->pluck('available_slot_id')
+        $doctorSlots = $doctor->availableSlots
+            ->whereIn('id', $slotRange)
+            ->pluck('id')
             ->toArray();
 
         // جلب معلومات الـ slots
-        $slots = DB::table('available_slots')
-            ->whereIn('id', $slotRange)
+        $slots = AvailableSlot::whereIn('id', $slotRange)
             ->orderBy('id')
             ->get()
-            ->map(function ($slot) use ($doctorSlots, $doctor, $date) {
-                $isDoctorAvailable = in_array($slot->id, $doctorSlots);
+            ->map(function ($slot) use ($doctor, $doctorSlots, $date) {
 
-                $isAlreadyBooked = DB::table('appointments')
-                    ->where('doctor_id', $doctor->doctor_id)
+                $hasVacation = $doctor->employee->vacations()
+                    ->where('status', 'active')
+                    ->where('start_day', '<=', $date->toDateString())
+                    ->where('end_day', '>', $date->toDateString())
+                    ->exists();
+
+                $isDoctorAvailable = in_array($slot->id, $doctorSlots) && !$hasVacation;
+
+                $isAlreadyBooked = $doctor->appointments()
                     ->where('slot_id', $slot->id)
                     ->where('date', $date->toDateString())
                     ->exists();
 
+                $appointmentDateTime = Carbon::parse($date->toDateString() . ' ' . $slot->start_time);
+                $isInThePast = $appointmentDateTime->isPast();
+
                 return [
                     'id' => $slot->id,
                     'time' => $slot->start_time,
-                    'isAvailable' => $isDoctorAvailable && !$isAlreadyBooked,
+                    'isAvailable' => $isDoctorAvailable && !$isAlreadyBooked && !$isInThePast,
                 ];
             });
 
         return response()->json([
-            'doctor_id' => $doctor->doctor_id,
+            'doctor_id' => $doctor->id,
             'slots' => $slots,
         ]);
     }
+
+
+
 }

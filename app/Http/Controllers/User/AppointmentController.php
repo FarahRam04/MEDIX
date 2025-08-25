@@ -11,6 +11,7 @@ use App\Services\AppointmentService;
 use Carbon\Carbon;
 use Google\Service\AdMob\App;
 use Illuminate\Http\Request;
+use Stichoza\GoogleTranslate\GoogleTranslate;
 
 class AppointmentController extends Controller
 {
@@ -24,17 +25,15 @@ class AppointmentController extends Controller
         $status = $request->query('status');
 
         if (!$user->patient) {
-            return response()->json([], 200);
+            return response()->json(['data'=>[]], 200);
         }
 
         $patient = $user->patient;
         $appointments = Appointment::with(['doctor.employee.user', 'slot'])
             ->where('patient_id', $patient->id)
-            ->where('status', $status)
+            ->where('status->en', $status)
             ->orderBy('date', 'desc')
             ->get();
-
-
 
         return AppointmentResource::collection($appointments);
     }
@@ -169,8 +168,8 @@ class AppointmentController extends Controller
             ['department_id'      => $appointment->department_id,
             'doctor_id'           => $appointment->doctor_id,
             'request_type_id'     => $requestTypeId,
-            'day'                 => $appointment->date,
-            'time_id'             => $appointment->slot_id,
+            'date'                 => $appointment->date,
+            'slot_id'             => $appointment->slot_id,
             'with_medical_report' => (bool) $appointment->with_medical_report,
             ];
         if ($appointment->offer_id ){

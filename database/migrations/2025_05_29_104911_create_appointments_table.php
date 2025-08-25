@@ -24,10 +24,8 @@ return new class extends Migration
             $table->foreignId('slot_id')->constrained('available_slots')->onDelete('cascade'); // وقت الحجز الثابت
 
             $table->string('specialization');
-            $table->enum('status', ['pending', 'completed'])->default('pending');
+            $table->json('status');
 
-            //$table->unsignedBigInteger('check_up_price')->default(50000);
-            //$table->boolean('lab_tests')->default(false);
             $table->enum('type', ['check_up', 'follow_up']);
             $table->boolean('with_medical_report')->default(false);
             $table->unsignedBigInteger('init_total_price')->nullable();

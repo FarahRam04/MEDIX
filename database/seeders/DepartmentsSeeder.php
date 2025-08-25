@@ -14,25 +14,12 @@ class DepartmentsSeeder extends Seeder
     public function run(): void
     {
         DB::table('departments')->insert([
-            [
-                'name'=>'General'
-            ],
-            [
-                'name'=>'Cardiology'
-            ],
-            [
-                'name'=>'Dermatology'
-            ],
-            [
-                'name'=>'Gastroenterology'
-            ],
-            [
-                'name'=>'Neurology'
-            ],
-            [
-                'name'=>'Pediatric'
-            ]
-
+            ['name' => json_encode(['en'=>'General'])],
+            ['name' => json_encode(['en'=>'Cardiology'])],
+            ['name' => json_encode(['en'=>'Dermatology'])],
+            ['name' => json_encode(['en'=>'Gastroenterology'])],
+            ['name' => json_encode(['en'=>'Neurology'])],
+            ['name' => json_encode(['en'=>'Pediatric'])],
         ]);
     }
 }

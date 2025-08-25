@@ -14,9 +14,10 @@ class HomeResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $locale=app()->getLocale();
         return [
             'id'=>$this->id,
-            'name'=>$this->employee->first_name.' '.$this->employee->last_name,
+            'name'=>$this->employee->getTranslation('first_name',$locale).' '.$this->employee->getTranslation('last_name',$locale),
             'image'=>$this->image_url,
             'specialty'=>$this->specialist,
             'rate'=>$this->final_rating,

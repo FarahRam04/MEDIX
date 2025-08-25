@@ -70,7 +70,7 @@ class UserController extends Controller
             'Phone Number'=>$user->phone_number,
             'email'=>$user->email,
             'password'=>$user->password,
-            'image'=>asset('storage/'.$user->image)
+            'image'=>$user->image ? asset('storage/'.$user->image): null
         ],200);
     }
 

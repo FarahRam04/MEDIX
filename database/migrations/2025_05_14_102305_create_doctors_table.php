@@ -18,13 +18,14 @@ return new class extends Migration
             $table->string('certificate')->nullable();
             $table->string('medical_license_number')->nullable();
             $table->string('image')->nullable();
-            $table->string('specialist')->default('undefined');
+
+            $table->json('specialist');
+            $table->json('bio');
+
             $table->unsignedBigInteger('number_of_treatments')->default(0);
-            $table->string('bio')->default('');
             $table->unsignedBigInteger('years_of_experience')->nullable();
-            //rating
-            $table->float('initial_rating')->default(3);
-            $table->float('final_rating')->default(3);
+            $table->float('initial_rating');
+            $table->float('final_rating');
             $table->unsignedInteger('rating_votes')->default(0);
             $table->unsignedInteger('rating_total')->default(0);
 

@@ -27,6 +27,7 @@ class OfferController extends Controller
             'selected_service.request_type_id' => 'required|in:1,2',
             'selected_service.with_medical_report' => 'required|boolean',
         ]);
+        $locale=app()->getLocale();
 
         if ($request->offer_id !== null) {
             $offer = Offer::findOrFail($request->offer_id);
@@ -37,17 +38,21 @@ class OfferController extends Controller
             } elseif ($offer->payment_method === 'points') {
                 $offerPoints = $offer->points_required;
             }
-
+            if ($offerPoints > 0 && $offerPoints <=10) {
+                $points='نقاط';
+            }else{
+                $points='نقطة';
+            }
             return response()->json([
                 'price' => $finalPrice === 0 ? $offerPoints : round($finalPrice),
-                'currency' => $finalPrice === 0 ? 'Points' : 'SYP',
+                'currency' => $finalPrice === 0 ? ($locale=== 'en'?'Points':$points) : ($locale=== 'en'?'SYP':'ليرة سورية'),
             ]);
 
         } else {
             $Price = $this->getTotalPriceWithoutOffer($request->selected_service['request_type_id'], $request->selected_service['with_medical_report']);
             return response()->json([
                 'price' => $Price,
-                'currency' => 'SYP',
+                'currency' => $locale=== 'en'?'SYP':'ليرة سورية',
             ]);
 
         }

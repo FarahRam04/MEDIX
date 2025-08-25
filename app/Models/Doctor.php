@@ -6,10 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Support\Facades\URL;
+use Spatie\Translatable\HasTranslations;
 
 class Doctor extends Model
 {
-    use HasRoles,HasApiTokens;
+    use HasRoles,HasApiTokens,HasTranslations;
+
+    public $translatable = ['specialist','bio'];
+
+    protected $attributes=[
+        'initial_rating'=>'3',
+        'final_rating'=>'3',
+        'specialist'=>'"undefined"',
+        'bio'=>'" "',
+    ];
 
     protected $appends=['image_url'];
     public function getImageUrlAttribute()

@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::create('medications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('appointment_id')->constrained()->onDelete('cascade');
-            $table->string('name');
-            $table->string('type');
-            $table->string('dosage');
-            $table->string('frequency');
-            $table->string('duration');
-            $table->string('note');
+            $table->json('name');
+            $table->json('type');
+            $table->json('dosage');
+            $table->json('frequency');
+            $table->json('duration');
+            $table->json('note');
             $table->timestamps();
         });
     }
