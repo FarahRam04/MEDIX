@@ -10,6 +10,7 @@ use App\Models\Offer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class BookingPage extends Controller
 {
@@ -117,6 +118,14 @@ class BookingPage extends Controller
                 ->where('employees.role', 'doctor')
                 ->where('doctors.department_id', $department_id)
                 ->where('day_time.day_id', $dayId)
+                ->whereNotExists(function ($query) use ($date) {
+                    $query->select(DB::raw(1))
+                        ->from('vacations')
+                        ->whereColumn('vacations.employee_id', 'employees.id')
+                        ->where('vacations.status', 'active')
+                        ->where('vacations.start_day', '<=', $date->toDateString())
+                        ->where('vacations.end_day', '>=', $date->toDateString());
+                })
                 ->exists();
         }
 
@@ -135,7 +144,12 @@ class BookingPage extends Controller
             $date = Carbon::parse($day['day']);
             $dayId = $date->dayOfWeek;
             $doctorDays=$doctor->employee->time->days->pluck('id')->toArray();
-            if (in_array($dayId, $doctorDays)){
+            $hasVacation=$doctor->employee->vacations()
+                ->where('status','active')
+                ->where('start_day','<=',$date->toDateString())
+                ->where('end_day','>=',$date->toDateString())
+                ->exists();
+            if (in_array($dayId, $doctorDays) && !$hasVacation){
                 $day['isAvailable']=true;
             }
         }
@@ -153,7 +167,7 @@ class BookingPage extends Controller
 
         $departmentId = $request->department_id;
         $date = Carbon::parse($request->date);
-        $dayId = $date->dayOfWeek; // 0 = الأحد، 6 = السبت
+        $dayId = $date->dayOfWeek;
 
         $slotRange = $request->shift === 'morning'
             ? range(1, 8)
@@ -203,10 +217,13 @@ class BookingPage extends Controller
                     ->where('date', $date->toDateString())
                     ->exists();
 
+                $appointmentDateTime = Carbon::parse($date->toDateString() . ' ' . $slot->start_time);
+                $isInThePast= $appointmentDateTime->isPast();
+
                 return [
                     'id' => $slot->id,
                     'time' => $slot->start_time,
-                    'isAvailable' => $isDoctorAvailable && !$isAlreadyBooked,
+                    'isAvailable' => $isDoctorAvailable && !$isAlreadyBooked &&!$isInThePast,
                 ];
             });
 

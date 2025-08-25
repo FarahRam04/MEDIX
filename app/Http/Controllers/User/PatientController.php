@@ -331,8 +331,12 @@ class PatientController extends Controller
             }
 
             // 6. قفل الـ slot
-            $slot = AvailableSlot::lockForUpdate()->findOrFail($request->slot_id);
+            $slot = AvailableSlot::lockForUpdate()->findOrFail($request->slot_id);//lock the row of this slot until the transaction function ends to avoid race condition
+            $appointmentDateTime = Carbon::parse($request->date . ' ' . $slot->start_time);
 
+            if ($appointmentDateTime->isPast()) {
+                throw ValidationException::withMessages(['slot_id' => __('messages.past_slot')]);
+            }
             // ========================
             // 🟢 إنشاء الموعد
             // ========================
