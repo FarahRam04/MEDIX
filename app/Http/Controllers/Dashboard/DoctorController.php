@@ -21,6 +21,9 @@ use App\Models\Doctor;
 use Illuminate\Http\Request;
 
 use App\Models\Medication;
+use Stichoza\GoogleTranslate\Exceptions\LargeTextException;
+use Stichoza\GoogleTranslate\Exceptions\RateLimitException;
+use Stichoza\GoogleTranslate\Exceptions\TranslationRequestException;
 use Stichoza\GoogleTranslate\GoogleTranslate;
 
 
@@ -184,12 +187,17 @@ class DoctorController extends Controller
         //
     }
 
+    /**
+     * @throws LargeTextException
+     * @throws RateLimitException
+     * @throws TranslationRequestException
+     */
     public function writePrescription(string $id, WritePrescriptionRequest $request)
     {
         // 1. تحقق من وجود الموعد
         $appointment = Appointment::find($id);
         if (!$appointment) {
-            return response()->json(['message' => 'الموعد غير موجود'], 404);
+            return response()->json(['message' => 'appointment not found'], 404);
         }
 
         // 2. تحقق من أن الطبيب الحالي هو صاحب الموعد
@@ -201,7 +209,7 @@ class DoctorController extends Controller
 
         if ($appointment->doctor_id !== $doctor->id) {
             return response()->json([
-                'message' => 'هذا الموعد لا يخص الطبيب الحالي',
+                'message' => 'this appointment does not related to this doctor',
                 'appointment->doctor_id'=>$appointment->doctor_id,
                 'token->doctor_id'=>$doctor->id
             ], 403);
@@ -210,21 +218,42 @@ class DoctorController extends Controller
 
         // 3. تحقق من أن الحالة pending
         if ($appointment->status !== 'pending') {
-            return response()->json(['message' => 'لا يمكن كتابة وصفة لموعد غير معلق'], 400);
+            return response()->json(['message' => 'You can not write a prescription for a pending appointment'], 400);
         }
 
+        $tr=new GoogleTranslate();
+        $tr->setSource('en');
+        $tr->setTarget('ar');
         // 4. تخزين الأدوية
         $medications = $request->input('medications');
+
         if (is_array($medications)) {
             foreach ($medications as $med) {
                 Medication::create([
                     'appointment_id' => $appointment->id,
-                    'name' => $med['name'],
-                    'type' => $med['type'],
-                    'dosage' => $med['dosage'],
-                    'frequency' => $med['frequency'],
-                    'duration' => $med['duration'],
-                    'note' => $med['note'],
+                    'name' => [
+                        'en'=>$med['name'],
+                        'ar'=>$tr->translate($med['name'])
+                    ],
+                    'type' => [
+                        'en'=>$med['type'],
+                        'ar'=>$tr->translate($med['type'])
+                    ],
+                    'dosage' =>[
+                        'en'=>$med['dosage'],
+                        'ar'=>$tr->translate($med['dosage'])
+                    ],
+                    'frequency' => [
+                        'en'=>$med['frequency'],
+                        'ar'=>$tr->translate($med['frequency'])
+                    ],
+                    'duration' => [
+                        'en'=>$med['duration'],
+                        'ar'=>$tr->translate($med['duration'])
+                    ],
+                    'note' => [
+                        'en'=>$med['note'],
+                        'ar'=>$tr->translate($med['note'])],
                 ]);
             }
         }
@@ -233,7 +262,10 @@ class DoctorController extends Controller
             foreach ($labTests as $labTest) {
                 LabTest::create([
                     'appointment_id' => $appointment->id,
-                    'name'=>$labTest
+                    'name'=>[
+                        'en'=>$labTest,
+                        'ar'=>$tr->translate($labTest)
+                    ]
                 ]);
             }
         }
@@ -243,7 +275,10 @@ class DoctorController extends Controller
             foreach ($surgeries as $sur) {
                 Surgery::create([
                     'appointment_id' => $appointment->id,
-                    'name'=>$sur
+                    'name'=>[
+                        'en'=>$sur,
+                        'ar'=>$tr->translate($sur)
+                    ]
                 ]);
             }
         }
@@ -252,7 +287,10 @@ class DoctorController extends Controller
             foreach ($advices as $ad) {
                 Advice::create([
                     'appointment_id' => $appointment->id,
-                    'advice'=>$ad
+                    'advice'=>[
+                        'en'=>$ad,
+                        'ar'=>$tr->translate($ad)
+                        ]
                 ]);
             }
         }
@@ -287,10 +325,41 @@ class DoctorController extends Controller
                 'user_id'=>$user->id
                 ]);
         }
-        $medications = $appointment->medications;
-        $lab_tests = $appointment->labTests;
-        $surgeries = $appointment->surgeries;
-        $advices = $appointment->advices;
+        $locale = app()->getLocale();
+        $medications = [];
+
+        foreach ($appointment->medications as $med) {
+            $medications[] = [
+                'id'=>$med->id,
+                'name' => $med->getTranslation('name', $locale),
+                'type' => $med->getTranslation('type', $locale),
+                'dosage' => $med->getTranslation('dosage', $locale),
+                'frequency' => $med->getTranslation('frequency', $locale),
+                'duration' => $med->getTranslation('duration', $locale),
+                'note' => $med->getTranslation('note', $locale),
+            ];
+        }
+        $lab_tests = [];
+        foreach($appointment->labTests as $labTest){
+            $lab_tests[]=[
+              'id'=>$labTest->id,
+              'name'=>$labTest->getTranslation('name', $locale),
+            ];
+        }
+        $surgeries =[];
+        foreach($appointment->surgeries as $sur){
+            $surgeries[]=[
+                'id'=>$sur->id,
+                'name'=>$sur->getTranslation('name', $locale),
+            ];
+        }
+        $advices =[];
+        foreach($appointment->advices as $advice){
+            $advices[]=[
+                'id'=>$advice->id,
+                'advice'=>$advice->getTranslation('advice', $locale),
+            ];
+        }
 
         $is_prescription_viewed=$appointment->is_prescription_viewed;
         $viewed=false;
