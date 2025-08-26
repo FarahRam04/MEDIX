@@ -423,7 +423,7 @@ class DoctorController extends Controller
                     'id'=>$doctor->id,
                     'name'=>$doctor->employee->first_name.' '.$doctor->employee->last_name,
                     'image'=>$doctor->image_url,
-                    'shift'=>$doctor->employee->time->start_time === '09:00:00' ? 'Morning' :'Afternoon',
+                    'shift'=>$doctor->employee->time->start_time === '09:00:00' ? 'morning' :'afternoon',
                     'treatments'=>$doctor->number_of_treatments,
                     'experience'=>$doctor->years_of_experience,
                     'rate'=>$doctor->final_rating
