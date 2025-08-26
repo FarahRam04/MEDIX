@@ -352,6 +352,7 @@ class PatientController extends Controller
                 'with_medical_report' => $request->with_medical_report ?? false,
                 'specialization'      => $specialization,
                 'init_total_price'    => $finalPrice,
+                'final_total_price'   => $finalPrice,
                 'status'              =>[
                 'en' => "pending",
                 'ar' => "قيد الانتظار",

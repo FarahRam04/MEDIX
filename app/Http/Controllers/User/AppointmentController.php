@@ -45,7 +45,7 @@ class AppointmentController extends Controller
         $status = $request->query('status') === 'unpaid' ? 0 : 1 ;
 
         if (!$user->patient) {
-            return response()->json([], 200);
+            return response()->json(['data'=>[]], 200);
         }
 
         $appointments=Appointment::with(['doctor','department','slot'])
@@ -54,13 +54,14 @@ class AppointmentController extends Controller
             ->orderBy('id', 'asc')
             ->get();
         $allData=[];
+        $locale=app()->getLocale();
 
         foreach ($appointments as $appointment) {
             $data=[
                 'id' => $appointment->id,
-                'status' => $appointment->payment_status === 0 ? 'unpaid' : 'paid',
+                'status' => $appointment->payment_status === 0 ? ($locale==='en'?'unpaid':'غير مدفوعة') : ($locale==='en'?'paid':'مدفوعة'),
                 'total_price'=>$appointment->final_total_price,
-                'currency' => 'SYP',
+                'currency' => $locale==='en'?'SYP':'ليرة سورية',
                 'doctor_name' => $appointment->doctor->employee->first_name . ' ' . $appointment->doctor->employee->last_name,
                 'department' => $appointment->department->name,
                 'appointment_date_time' => Carbon::parse(
@@ -87,28 +88,38 @@ class AppointmentController extends Controller
         if (!$appointment) {
             return response()->json(['error'=>'Bill Not Found .'], 404);
         }
+        $locale=app()->getLocale();
+
         $priceKey=$appointment->type === 'check_up' ? 'Check_Up Price': 'Follow_Up Price';
-        $priceValue=$appointment->type === 'check_up' ?'50000 SYP' :'25000 SYP';
+        $priceValue=$appointment->type === 'check_up' ?'50000 '.($locale==='en'?'SYP':'ليرة سورية') :'25000 '.($locale==='en'?'SYP':'ليرة سورية');
 
         $status=$appointment->payment_status === 0 ? 'Unpaid' : 'Paid';
+
+
 
         $payment_method='Cash';
         if ($appointment->offer && $appointment->offer->payment_method === 'points') {
             $payment_method='Points';
         }
+
+        $tr=new GoogleTranslate();
+        $tr->setSource('en');
+        $tr->setTarget('ar');
+        $payment_method_ar=$tr->translate($payment_method);
         $data=[
             'Id'=> '# '.$appointment->id,
-            'Status'=>$status,
+            'Status'=>$locale==='en'?$status:'غير مدفوعة',
             'Payment Date'=>$status=== 'Unpaid'?'----' :Carbon::today()->format('YFd'),
             'Payment Time'=>$status==='Unpaid'?'----': Carbon::now()->format('h:i A'),
-            'Payment Method'=>$payment_method,
+            'Payment Method'=>$locale==='en'?$payment_method:$payment_method_ar,
         ];
+
 
         $total_price=$appointment->final_total_price;
         if ($appointment->offer === null || $appointment->offer && $appointment->offer->payment_method === 'cash') {
             $data[$priceKey]=$priceValue;
             if ($appointment->with_medical_report) {
-                $data['Medical Report Price'] = '20000 SYP';
+                $data['Medical Report Price'] = '20000'. ($locale==='en'?' SYP':' ليرة سورية ');
             }
         }
 
@@ -117,7 +128,7 @@ class AppointmentController extends Controller
             foreach ($additional_costs as &$additional_cost){
                 $additional_key=$additional_cost['title'].' Price';
                 $additional_value=$additional_cost['price'];
-                $data[$additional_key]=$additional_value.' SYP';
+                $data[$additional_key]=$additional_value.($locale==='en'?' SYP':' ليرة سورية');
             }
 
         }
@@ -136,7 +147,7 @@ class AppointmentController extends Controller
 
             $data['Total Price Before Discount ']=$before_dis;
         }
-        $data['Total Price']=$total_price.' SYP';
+        $data['Total Price']=$total_price.($locale==='en'?' SYP':' ليرة سورية ');
         return response()->json($data);
 
     }

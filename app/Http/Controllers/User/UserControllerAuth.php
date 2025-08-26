@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Stichoza\GoogleTranslate\GoogleTranslate;
 
 class UserControllerAuth extends Controller
 {
@@ -23,6 +24,23 @@ class UserControllerAuth extends Controller
             $validated['image'] = $path;
         }
         $user = User::create($validated);
+        $tr= new GoogleTranslate();
+        $tr->setSource('en');
+        $tr->setTarget('ar');
+
+        $user->first_name=[
+            'en'=>$validated['first_name'],
+            'ar'=>$tr->translate($validated['first_name'])
+        ];
+        $user->last_name=[
+            'en'=>$validated['last_name'],
+            'ar'=>$tr->translate($validated['last_name'])
+        ];
+        $user->gender=[
+            'en'=>$validated['gender'],
+            'ar'=>$tr->translate($validated['gender'])
+        ];
+        $user->save();
         Auth::login($user);
 
         $token = $user->createToken('auth_token for u.' . $user->first_name)->plainTextToken;
