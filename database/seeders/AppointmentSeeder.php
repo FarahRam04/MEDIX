@@ -78,7 +78,7 @@ class AppointmentSeeder extends Seeder
                 'specialization' => $doctor->department->name ?? 'General',
                 'status' => $status,
                 'payment_status' => $status === 'completed',
-                'with_medical_report' => $status === 'completed' && $faker->boolean(30),
+                'with_medical_report' => $status === 'completed' && ($appointmentsCreated === 0 || $faker->boolean(30)),
             ];
             if ($data['type'] === 'check_up') {
                 $total_price=50000;
@@ -93,6 +93,9 @@ class AppointmentSeeder extends Seeder
                     $total+=20000;
                 }
                 $data['final_total_price'] = $total;
+                if ($data['with_medical_report']) {
+                    $data['medical_report_path'] = 'medical_reports/' . $faker->bothify('????????##.pdf');
+                }
             }
 
             // إنشاء الموعد

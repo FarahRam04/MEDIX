@@ -30,7 +30,7 @@ class RegisterUserRequest extends FormRequest
             'email'=>'required|unique:users,email|email|max:255',
             'password'=>'required|confirmed|min:8',
             'image' => 'image|mimes:jpeg,png,jpg,gif,svg|nullable',
-            'fcm_token'=> 'required|string',
+            'fcm_token'=> 'string',
         ];
     }
 }
