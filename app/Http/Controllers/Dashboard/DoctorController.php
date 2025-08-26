@@ -268,15 +268,17 @@ class DoctorController extends Controller
                     }
                 }
 
+                $totalAdditionalCost = 0;
+
                 if ($request->has('additional_costs')) {
                     foreach ($request->additional_costs as $cost) {
                         $appointment->additionalCosts()->create([
                             'title' => $cost['title'],
                             'price' => $cost['price'],
                         ]);
+                        $totalAdditionalCost += $cost['price'];
                     }
                 }
-                $totalAdditionalCost = $appointment->additionalCosts()->sum('price');
                 $appointment->final_total_price = $appointment->init_total_price + $totalAdditionalCost;
 
                 $appointment->setTranslation('status', 'en', 'completed');
