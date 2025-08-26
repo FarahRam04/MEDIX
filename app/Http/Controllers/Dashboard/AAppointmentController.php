@@ -36,9 +36,11 @@ class AAppointmentController extends Controller
             $query->whereYear('date', $year)->whereMonth('date', $month);
         }
 
+
         $query->when($request->has('status'), function ($q) use ($request) {
-            return $q->where('status', $request->status);
+            return $q->where('status->en', $request->status);
         });
+
 
         $query->when($request->has('doctor_id'), function ($q) use ($request) {
             return $q->where('doctor_id', $request->doctor_id);
@@ -349,4 +351,32 @@ class AAppointmentController extends Controller
 
         return response()->json($formattedDoctors);
     }
+    public function confirmPayment(string $id)
+    {
+        $appointment = Appointment::find($id);
+        if (!$appointment) {
+            return response()->json(['message' => 'Appointment not found.'], 404);
+        }
+
+        if ($appointment->status !== 'completed') {
+            return response()->json(['message' => 'Cannot confirm payment for an appointment that is not yet completed.'], 400);
+        }
+
+        if ($appointment->payment_status) {
+            return response()->json(['message' => 'This appointment has already been paid.'], 400);
+        }
+
+        $appointment->payment_status = true;
+
+        $appointment->payment_date = now();
+
+        $appointment->save();
+
+        return response()->json([
+            'message' => 'Payment confirmed successfully.',
+            'appointment_id' => $appointment->id,
+            'new_payment_status' => 'Paid'
+        ], 200);
+    }
+
 }

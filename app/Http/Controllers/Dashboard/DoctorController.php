@@ -272,7 +272,7 @@ class DoctorController extends Controller
 
                 if ($request->has('additional_costs')) {
                     foreach ($request->additional_costs as $cost) {
-                        $appointment->additionalCosts()->create([
+                        $appointment->additional_costs()->create([
                             'title' => $cost['title'],
                             'price' => $cost['price'],
                         ]);

@@ -17,9 +17,10 @@ class DashboardAppointmentResource extends JsonResource
         return [
             'id' => $this->id,
             'date' => $this->date,
-            'status' => $this->status,
+            'medical_status' => $this->status,
             'type' => $this->type,
             'with_medical_report' => (bool) $this->with_medical_report,
+            'financial_status' => $this->payment_status ? 'paid' : 'unpaid',
             'total_price' => $this->final_total_price,
             'slot' => [
                 'id' => $this->whenLoaded('slot', $this->slot->id),
