@@ -45,7 +45,7 @@ class AppointmentController extends Controller
         $status = $request->query('status') === 'unpaid' ? 0 : 1 ;
 
         if (!$user->patient) {
-            return response()->json([], 200);
+            return response()->json(['data'=>[]], 200);
         }
 
         $appointments=Appointment::with(['doctor','department','slot'])
