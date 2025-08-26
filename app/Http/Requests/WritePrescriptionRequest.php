@@ -37,6 +37,9 @@ class WritePrescriptionRequest extends FormRequest
 
             'advices' => 'sometimes|required|array|min:1',
             'advices.*' => 'string',
+            'additional_costs' => 'nullable|array',
+            'additional_costs.*.title' => 'required_with:additional_costs|string|max:255',
+            'additional_costs.*.price' => 'required_with:additional_costs|numeric|min:0',
         ];
 
     }

@@ -68,20 +68,6 @@ class AppointmentController extends Controller
                 )->format('Y-m-d\TH:i:s')
             ];
 
-            if ($appointment->offer && $appointment->offer->payment_method === 'points' && count($appointment->additional_costs)===0)
-                continue;
-
-            $total_price=$appointment->init_total_price;
-
-            if ( count($appointment->additional_costs) > 0) {
-                foreach ($appointment->additional_costs as $additional_cost) {
-                    $total_price += $additional_cost->price;
-                }
-            }
-                $appointment->final_total_price = $total_price;
-                $appointment->update();
-
-            $data['total_price']=$appointment->final_total_price;
 
             $allData[]=$data;
 

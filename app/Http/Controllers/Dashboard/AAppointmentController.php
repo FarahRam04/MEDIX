@@ -101,10 +101,10 @@ class AAppointmentController extends Controller
                     'slot_id' => $validatedData['slot_id'],
                     'type' => $validatedData['request_type_id'] === 1 ? 'check_up' : 'follow_up',
                     'with_medical_report' => $validatedData['with_medical_report'] ?? false,
-                    'offer_id' => ($offer && $offer->payment_method === 'cash') ? $offer->id : null, // فقط إذا كان العرض نقدي
+                    'offer_id' => ($offer && $offer->payment_method === 'cash') ? $offer->id : null,
                     'specialization' => $doctor->department->name,
                     'init_total_price' => $finalPrice,
-                    'final_total_price' => $finalPrice, // مبدئياً السعر النهائي هو نفسه
+                    'final_total_price' => $finalPrice,
                     'status' => 'pending',
                     'payment_status' => false,
                 ]);
