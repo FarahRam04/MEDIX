@@ -34,6 +34,9 @@ class DoctorController extends Controller
 
     public function assignDepartmentAndSpecialty(Request $request, $id)
     {
+        $tr=new GoogleTranslate();
+        $tr->setSource('en');
+        $tr->setTarget('ar');
         $doctor = Doctor::with(['employee', 'department'])->find($id);
         if (!$doctor) {
             return response()->json(['message' => 'Doctor not found.'], 404);
@@ -43,7 +46,10 @@ class DoctorController extends Controller
             'specialist'    => 'required|string|max:255',
         ]);
         $doctor->department_id = $validatedData['department_id'];
-        $doctor->specialist = $validatedData['specialist'];
+        $doctor->specialist =[
+            'en'=>$validatedData['specialist'],
+            'ar'=>$tr->translate($validatedData['specialist']),
+        ];
         $doctor->save();
         $doctor->load('department');
 
@@ -114,19 +120,33 @@ class DoctorController extends Controller
             'qualifications.*'       => 'string|max:255', // كل عنصر في المصفوفة يجب أن يكون نصاً
         ]);
 
+        $tr= new GoogleTranslate();
+        $tr->setSource('en');
+        $tr->setTarget('ar');
+
         $doctor->fill($request->only([
             'certificate',
             'medical_license_number',
-            'bio',
             'years_of_experience'
         ]));
+        if ($request->has('bio')){
+            $doctor->bio=[
+                'en'=>$validatedData['bio'],
+                'ar'=>$tr->translate($validatedData['bio']),
+            ];
+        }
 
 
         if ($request->has('qualifications')) {
 
             $doctor->qualifications()->delete();
             foreach ($request->qualifications as $name) {
-                $doctor->qualifications()->create(['name' => $name]);
+                $doctor->qualifications()->create(
+                    ['name' => [
+                        'en'=>$name,
+                        'ar'=>$tr->translate($name)
+                              ]
+                    ]);
             }
         }
 
@@ -419,11 +439,12 @@ class DoctorController extends Controller
             ->whereHas('employee.time', fn($q) => $q->where('start_time', $startTime))
             ->get()
             ->map(function ($doctor){
+                $locale=app()->getLocale();
                 return[
                     'id'=>$doctor->id,
                     'name'=>$doctor->employee->first_name.' '.$doctor->employee->last_name,
                     'image'=>$doctor->image_url,
-                    'shift'=>$doctor->employee->time->start_time === '09:00:00' ? 'morning' :'afternoon',
+                    'shift'=>$doctor->employee->time->start_time === '09:00:00' ? ($locale==='en'?'morning':'صباحي' ):($locale==='en'?'afternoon':'مسائي'),
                     'treatments'=>$doctor->number_of_treatments,
                     'experience'=>$doctor->years_of_experience,
                     'rate'=>$doctor->final_rating
