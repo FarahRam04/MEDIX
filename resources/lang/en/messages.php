@@ -12,5 +12,6 @@ return[
     'slot_double'      => 'Book denied: you already have another appointment at this time.',
     'date_doctor'      => 'The doctor does not work in this day',
     'booked'           => 'Appointment booked successfully',
-    'past_slot'        =>'Cannot book an appointment in the past.'
+    'past_slot'        =>'Cannot book an appointment in the past.',
+    'updated'          =>'Appointment updated successfully',
 ];
