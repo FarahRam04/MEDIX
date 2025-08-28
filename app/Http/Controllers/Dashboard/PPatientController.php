@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\PatientResource;
 use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -105,4 +106,59 @@ class PPatientController extends Controller
 
         return response()->json( ['suggests'=>$formattedPatients]);
     }
+
+
+    public function updateVitals(Request $request,string $id)
+    {
+
+        $validatedData = $request->validate([
+            'heart_rate'   => 'nullable|string|max:50',
+            'blood_group'  => 'nullable|in:A+,A-,B+,B-,AB+,AB-,O+,O-',
+            'temperature'  => 'nullable|numeric',
+            'weight'       => 'nullable|numeric',
+            'height'       => 'nullable|numeric',
+            'pressure'     => 'nullable|string|max:50',
+            'blood_sugar'  => 'nullable|string|max:50',
+        ]);
+
+        $patient = Patient::find($id);
+        if (!$patient){
+            return response()->json(['message'=>'Patient Not Found.'],404);
+        }
+
+        $patient->update($validatedData);
+
+        return response()->json([
+            'message' => "Patient's vital signs have been updated successfully.",
+            'patient' => $patient->fresh()
+        ]);
+    }
+
+    public function index(Request $request)
+    {
+        $query = Patient::with('user');
+        if ($request->has('search')) {
+            $searchTerm = $request->search;
+            $query->whereHas('user', function ($q) use ($searchTerm) {
+                $q->where('first_name', 'like', "%{$searchTerm}%")
+                    ->orWhere('last_name', 'like', "%{$searchTerm}%")
+                    ->orWhere('phone_number', 'like', "%{$searchTerm}%");
+            });
+        }
+
+        $patients = $query->paginate(15);
+        return PatientResource::collection($patients);
+    }
+    public function show(string $id )
+    {
+        $patient = Patient::find($id);
+        if (!$patient){
+            return response()->json(['message'=>'Patient Not Found.'],404);
+        }
+        return new PatientResource($patient->load('user'));
+    }
+
+
+
 }
+
