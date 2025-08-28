@@ -520,27 +520,7 @@ class DoctorController extends Controller
         ], 200);
     }
 
-    public function search(Request $request)
-    {
-        $request->validate([
-            'keyword'=>'required|string'
-        ]);
 
-        $locale = app()->getLocale();
-        $keyword = $request->input('keyword');
-
-        $results = DB::table('departments')
-            ->where("name->{$locale}", 'LIKE', "%{$keyword}%")
-            ->get()
-            ->map(function ($item) use ($locale) {
-                return [
-                    'id'   => $item->id,
-                    'name' => json_decode($item->name, true)[$locale] ?? null,
-                ];
-            });
-
-        return response()->json($results);
-    }
 
 
 
