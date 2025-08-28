@@ -40,6 +40,8 @@ Route::post('/user_login',[UserControllerAuth::class,'login']);
 
 //routes for all
 
+Route::get('/departments/search',[DoctorController::class,'search']);
+
 Route::get('/offers',[OfferController::class,'offers']);
 Route::get('/offer/{id}',[BookingPage::class,'offerDays']);
 Route::get('/offer_price',[OfferController::class,'offerPrice']);
