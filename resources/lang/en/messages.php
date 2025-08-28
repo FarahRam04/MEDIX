@@ -14,4 +14,5 @@ return[
     'booked'           => 'Appointment booked successfully',
     'past_slot'        =>'Cannot book an appointment in the past.',
     'updated'          =>'Appointment updated successfully',
+    'vital_signs'      =>'you are not a patient in our clinics yet ,so you do not have vital signs yet'
 ];
