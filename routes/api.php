@@ -147,12 +147,12 @@ Route::middleware(['auth:sanctum','is_admin'])->group(function () {
         Route::get('/dashboard/offers/{id}/show', 'show');
     });
 
-    Route::get('/users',[UserController::class, 'index']);//get all users
 });
 ////////////////////////////////////////////////////////////////////////////////////////////
 Route::middleware(['auth:sanctum', 'is_admin_or_receptionist'])->group(function () {
     Route::get('/dashboard/appointments', [AAppointmentController::class, 'index']);
     Route::get('/vacations', [VacationController::class,'index']);
+    Route::get('/users',[UserController::class, 'index']);//get all users
 
 });
 /////////////////////////////////////////////////////////////////////////////////////////////
