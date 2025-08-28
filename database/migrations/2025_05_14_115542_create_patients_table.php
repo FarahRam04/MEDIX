@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::create('patients', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('blood_type')->nullable();
-            $table->decimal('height',5,2)->nullable();
-            $table->decimal('weight',5,2)->nullable();
-            $table->unsignedBigInteger('age')->nullable();
-            $table->string('surgical_operations')->nullable();
-            $table->string('allergies')->nullable();
-            $table->string('chronic_diseases')->nullable();
+            $table->enum('blood_group', ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])->nullable();
+            $table->decimal('temperature', 4, 1)->nullable();;
+            $table->decimal('weight', 5, 2)->nullable();;
+            $table->decimal('height', 5, 2)->nullable();;
+            $table->string('heart_rate')->nullable();
+            $table->string('pressure')->nullable();
+            $table->string('blood_sugar')->nullable();
             $table->timestamps();
         });
 
