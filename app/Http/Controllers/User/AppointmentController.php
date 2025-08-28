@@ -10,6 +10,7 @@ use App\Models\Appointment;
 use App\Services\AppointmentService;
 use Carbon\Carbon;
 use Google\Service\AdMob\App;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Stichoza\GoogleTranslate\GoogleTranslate;
 
@@ -38,19 +39,7 @@ class AppointmentController extends Controller
             ->where('patient_id', $patient->id)
             ->where("status->en", $status);
 
-        if ($request->filled('keyword')) {
-            $keyword = $request->input('keyword');
-
-            $query->where(function ($q) use ($keyword, $locale) {
-                $q->whereHas('doctor.employee', function ($sub) use ($keyword, $locale) {
-                    $sub->where("first_name->{$locale}", 'LIKE', "%{$keyword}%")
-                        ->orWhere("last_name->{$locale}", 'LIKE', "%{$keyword}%");
-                })
-                    ->orWhereHas('doctor.department', function ($sub) use ($keyword, $locale) {
-                        $sub->where("name->{$locale}", 'LIKE', "%{$keyword}%");
-                    });
-            });
-        }
+        $this->keyword($request, $query, $locale);
 
         $appointments = $query->orderBy('date', 'desc')->get();
 
@@ -76,19 +65,7 @@ class AppointmentController extends Controller
             ->where('payment_status', $status);
 
         // إذا في كلمة بحث
-        if ($request->filled('keyword')) {
-            $keyword = $request->input('keyword');
-
-            $query->where(function ($q) use ($keyword, $locale) {
-                $q->whereHas('doctor.employee', function ($sub) use ($keyword, $locale) {
-                    $sub->where("first_name->{$locale}", 'LIKE', "%{$keyword}%")
-                        ->orWhere("last_name->{$locale}", 'LIKE', "%{$keyword}%");
-                })
-                    ->orWhereHas('doctor.department', function ($sub) use ($keyword, $locale) {
-                        $sub->where("name->{$locale}", 'LIKE', "%{$keyword}%");
-                    });
-            });
-        }
+        $this->keyword($request, $query, $locale);
 
         // تنفيذ الاستعلام
         $appointments = $query->orderBy('id', 'asc')->get();
@@ -293,6 +270,29 @@ class AppointmentController extends Controller
             'medical report url'=>$appointment->medical_report_path ? asset('storage/'.$appointment->medical_report_path) :null,
         ]);
 
+    }
+
+    /**
+     * @param Request $request
+     * @param Builder $query
+     * @param string $locale
+     * @return void
+     */
+    public function keyword(Request $request, Builder $query, string $locale): void
+    {
+        if ($request->filled('keyword')) {
+            $keyword = $request->input('keyword');
+
+            $query->where(function ($q) use ($keyword, $locale) {
+                $q->whereHas('doctor.employee', function ($sub) use ($keyword, $locale) {
+                    $sub->where("first_name->{$locale}", 'LIKE', "%{$keyword}%")
+                        ->orWhere("last_name->{$locale}", 'LIKE', "%{$keyword}%");
+                })
+                    ->orWhereHas('doctor.department', function ($sub) use ($keyword, $locale) {
+                        $sub->where("name->{$locale}", 'LIKE', "%{$keyword}%");
+                    });
+            });
+        }
     }
 
 }
