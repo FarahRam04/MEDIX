@@ -161,6 +161,10 @@ Route::middleware(['auth:sanctum', 'is_admin_or_receptionist'])->group(function 
 Route::middleware(['auth:sanctum','is_admin_or_receptionist_or_doctor'])->group(function () {
     Route::get('/dashboard/offers',[OOfferController::class,'index']);
     Route::get('/departments/doctors',[ DepartmentController::class,'index']);
+    Route::get('/dashboard/appointment/{id}/show', [AAppointmentController::class, 'show']);
+    Route::get('/patients/index', [PPatientController::class, 'index']);
+    Route::get('/patients/{id}/show', [PPatientController::class, 'show']);
+
 });
 
 
@@ -171,8 +175,8 @@ Route::middleware(['auth:sanctum','is_doctor'])->group(function () {
     Route::post('/update_profile',[DoctorController::class, 'update']);
     Route::post('/prescription/{id}',[DoctorController::class, 'writePrescription']);
     Route::post('/appointments/{id}/upload-report', [DoctorController::class, 'uploadMedicalReport']);
-
-
+    Route::get('/my-schedule', [AAppointmentController::class, 'getDoctorSchedule']);
+    Route::put('/patients/{id}/vitals', [PPatientController::class, 'updateVitals']);
 });
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -183,7 +187,6 @@ Route::middleware(['auth:sanctum','is_receptionist'])->group(function () {
     //reservations crud----------->
     Route::post('/dashboard/appointment/create', [AAppointmentController::class, 'store']);
     Route::put('/dashboard/appointment/{id}/update', [AAppointmentController::class, 'update']);
-    Route::get('/dashboard/appointment/{id}/show', [AAppointmentController::class, 'show']);
     Route::delete('/dashboard/appointment/{id}/delete', [AAppointmentController::class, 'destroy']);
 /////عرض اطباء لقسم معين
     Route::get('/dashboard/doctors-by-department', [AAppointmentController::class, 'getDoctorsByDepartment']);

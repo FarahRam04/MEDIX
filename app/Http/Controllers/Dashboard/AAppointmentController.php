@@ -379,4 +379,29 @@ class AAppointmentController extends Controller
         ], 200);
     }
 
+///step 1 show my appointments for day ->select patient (show patient appointment)///AAppointmentCon
+/// step 2 show patient details then  updateVilals (PPatientCon) -> add visit for this appointment (writePrescription + upload report) in DoctorCon
+/// step 3 get my visities ( getDoctorVisits in DoctorCon ),you cant update completed visit only report.
+    public function getDoctorSchedule(Request $request)
+    {
+        $user = auth()->user();
+        $doctorId = $user->doctor->id;
+
+
+        $query = Appointment::where('doctor_id', $doctorId)
+            ->where('status->en', 'pending')
+            ->with(['patient.user', 'slot']);
+
+        if ($request->has('date')) {
+            $query->whereDate('date', $request->date);
+        } else {
+
+            $query->whereDate('date', Carbon::today());
+        }
+
+        $appointments = $query->orderBy('slot_id', 'asc')->get();
+
+        return DashboardAppointmentResource::collection($appointments);
+    }
+
 }
