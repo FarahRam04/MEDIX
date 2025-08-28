@@ -94,7 +94,7 @@ Route::middleware(['auth:sanctum','is_user'])->group(function () {
 Route::post('/login', [AdminAndEmployeeAuth::class, 'login']);//
 Route::post('/logout', [AdminAndEmployeeAuth::class, 'logout'])->middleware('auth:sanctum');
 //you can hide anything in Employee or Admin Model
-
+///////////////////////////////////////////////////////////////////////////////////////
 //routs only for admins
 Route::middleware(['auth:sanctum','is_admin'])->group(function () {
 
@@ -118,7 +118,6 @@ Route::middleware(['auth:sanctum','is_admin'])->group(function () {
     });
 
     Route::controller(DepartmentController::class)->group(function (){
-        Route::get('/departments/doctors', 'index');//get all departments with doctors
         Route::post('/departments/create', 'store');//add a department
         Route::put('/departments/{id}', 'update');
         Route::delete('/departments/{id}', 'destroy');//delete a department
@@ -126,7 +125,6 @@ Route::middleware(['auth:sanctum','is_admin'])->group(function () {
     });
 
     Route::controller(VacationController::class)->group(function (){
-        Route::get('/vacations', 'index');
         Route::post('/vacations/create', 'store');
         Route::put('/vacations/{id}', 'update');
         Route::delete('/vacations/{id}/delete', 'destroy');
@@ -141,29 +139,28 @@ Route::middleware(['auth:sanctum','is_admin'])->group(function () {
         Route::get('/salaries/{id}/show', 'show');
     });
     Route::controller(OOfferController::class)->group(function (){
-        Route::get('/dashboard/offers', 'index');
         Route::post('/dashboard/offers/create', 'store');
         Route::put('/dashboard/offers/{id}', 'update');
         Route::delete('dashboard/offers/{id}/delete', 'destroy');
-      //  Route::get('/dashboard/offers/{id}/show', 'show');
+        Route::get('/dashboard/offers/{id}/show', 'show');
     });
-
-
-
 
     Route::get('/users',[UserController::class, 'index']);//get all users
-
-
+});
+////////////////////////////////////////////////////////////////////////////////////////////
+Route::middleware(['auth:sanctum', 'is_admin_or_receptionist'])->group(function () {
+    Route::get('/dashboard/appointments', [AAppointmentController::class, 'index']);
+    Route::get('/vacations', [VacationController::class,'index']);
 
 });
-
-//routs only for employees
-Route::middleware(['auth:sanctum','is_employee'])->group(function () {
-    Route::get('/employee-only', function () {
-        return response()->json(['message' => 'Welcome Employee']);
-    });
+/////////////////////////////////////////////////////////////////////////////////////////////
+Route::middleware(['auth:sanctum','is_admin_or_receptionist_or_doctor'])->group(function () {
+    Route::get('/dashboard/offers',[OOfferController::class,'index']);
+    Route::get('/departments/doctors',[ DepartmentController::class,'index']);
 });
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 //routes only for doctors
 
 Route::middleware(['auth:sanctum','is_doctor'])->group(function () {
@@ -173,10 +170,8 @@ Route::middleware(['auth:sanctum','is_doctor'])->group(function () {
 
 
 });
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
-Route::middleware(['auth:sanctum', 'is_admin_or_receptionist'])->group(function () {
-    Route::get('/dashboard/appointments', [AAppointmentController::class, 'index']);
-});
 //routes only for reception
 Route::middleware(['auth:sanctum','is_receptionist'])->group(function () {
     Route::post('/dashboard/patients/register', [PPatientController::class, 'registerPatient']);
@@ -191,6 +186,7 @@ Route::middleware(['auth:sanctum','is_receptionist'])->group(function () {
 
 
 });
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //WhatsApp
 Route::post('/send-code',[WhatsAppController::class, 'code']);//send whatsapp verification code
 Route::post('/verify-code',[WhatsAppController::class, 'verify']);

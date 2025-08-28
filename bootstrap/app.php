@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\CheckAdminOrReceptionist;
+use App\Http\Middleware\CheckAdminOrReceptionistOrDoctors;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\EnsureUserIsDoctor;
 use App\Http\Middleware\EnsureUserIsEmployee;
@@ -30,7 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'is_doctor'=>EnsureUserIsDoctor::class,
             'is_receptionist'=>EnsureUserIsReceptionist::class,
             'is_admin_or_receptionist' => CheckAdminOrReceptionist::class,
-
+'is_admin_or_receptionist_or_doctor'=>CheckAdminOrReceptionistOrDoctors::class
             ]);
 
         //
