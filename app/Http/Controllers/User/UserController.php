@@ -107,6 +107,23 @@ class UserController extends Controller
         return response()->json(['Done'=>'password changed successfully'],200);
     }
 
+    public function getVitalSigns()
+    {
+        $user=auth()->user();
+        if (! $user->patient){
+            return response()->json([__('messages.vital_signs')],422);
+        }
+        return response()->json([
+            'heart_rate'=>$user->patient->heart_rate,
+            'blood_group'=>$user->patient->blood_group,
+            'temperature'=>$user->patient->temperature,
+            'weight'=>$user->patient->weight,
+            'height'=>$user->patient->height,
+            'pressure'=>$user->patient->pressure,
+            'blood_sugar'=>$user->patient->blood_sugar,
+        ]);
+    }
+
 
 
 

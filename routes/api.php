@@ -87,6 +87,8 @@ Route::middleware(['auth:sanctum','is_user'])->group(function () {
     Route::put('/user/password',[UserController::class,'updatePassword']);
     Route::get('/user/bills',[AppointmentController::class, 'getUserBills']);
     Route::get('/user/bill/{id}',[AppointmentController::class, 'getBillDetails']);
+    Route::get('/medical_report/appointment/{id}',[AppointmentController::class, 'getMedicalReport']);
+    Route::get('/vital_signs',[UserController::class, 'getVitalSigns']);
 
 
 

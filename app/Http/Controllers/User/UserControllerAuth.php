@@ -24,18 +24,13 @@ class UserControllerAuth extends Controller
             $validated['image'] = $path;
         }
         $user = User::create($validated);
-        $tr= new GoogleTranslate();
+
+        $tr=new GoogleTranslate();
         $tr->setSource('en');
         $tr->setTarget('ar');
 
-        $user->first_name=[
-            'en'=>$validated['first_name'],
-            'ar'=>$tr->translate($validated['first_name'])
-        ];
-        $user->last_name=[
-            'en'=>$validated['last_name'],
-            'ar'=>$tr->translate($validated['last_name'])
-        ];
+        $user->first_name=$validated['first_name'];
+        $user->last_name=$validated['last_name'];
         $user->gender=[
             'en'=>$validated['gender'],
             'ar'=>$tr->translate($validated['gender'])
