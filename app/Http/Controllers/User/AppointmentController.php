@@ -145,7 +145,7 @@ class AppointmentController extends Controller
                 }
             }
 
-            $data['Total Price Before Discount ']=$before_dis;
+            $data['Total Price Before Discount ']=$before_dis.($locale==='en'?' SYP':' ليرة سورية ');
         }
         $data['Total Price']=$total_price.($locale==='en'?' SYP':' ليرة سورية ');
         return response()->json($data);
@@ -236,6 +236,22 @@ class AppointmentController extends Controller
             'Medical Report Price'=>$appointment->with_medical_report ? '25000 SYP' : '0 SYP',
             'Total Price'=>$appointment->total_price,
         ]);
+    }
+
+    public function getMedicalReport($id)
+    {
+        $appointment = Appointment::with('patient.user')->find($id);
+        if (!$appointment) {
+            return response()->json(['message' => 'Appointment not found.'], 404);
+        }
+        if ($appointment->patient->user_id !== auth()->id()) {
+            return response()->json(['message' => 'You are not authorized to view this appointment.'], 403);
+        }
+
+        return response()->json([
+            'medical report url'=>$appointment->medical_report_path ? asset('storage/'.$appointment->medical_report_path) :null,
+        ]);
+
     }
 
 }

@@ -13,7 +13,7 @@ class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable ,HasApiTokens,HasTranslations;
-    public $translatable = ['first_name','last_name','gender'];
+    public $translatable = ['gender'];
 
     /**
      * The attributes that are mass assignable.
