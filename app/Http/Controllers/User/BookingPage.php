@@ -15,28 +15,44 @@ use Illuminate\Validation\ValidationException;
 class BookingPage extends Controller
 {
 
-    public function departments()
+    public function departments(Request $request)
     {
+        $locale = app()->getLocale();
+
+        if ($request->query('keyword'))
+        {
+            $request->validate([
+                'keyword' => 'required|string'
+            ]);
+
+            $keyword = $request->input('keyword');
+
+            $departments = Department::where("name->{$locale}", 'LIKE', "%{$keyword}%")->get();
+        } else {
+            $departments = Department::all();
+        }
+
         $data = [];
-        $departments = Department::all();
         foreach ($departments as $department) {
-            if ($department->id === 1) {
-                continue;
-            }
+
             $morningDoctors = 0;
             $afternoonDoctors = 0;
-            $doctors = $department->doctors;
-            foreach ($doctors as $doctor) {
+
+            foreach ($department->doctors as $doctor) {
                 $time = $doctor->employee->time;
-                $time->start_time === '09:00:00' ? $morningDoctors++ : $afternoonDoctors++;
+                $time->start_time === '09:00:00'
+                    ? $morningDoctors++
+                    : $afternoonDoctors++;
             }
+
             $data[] = [
                 'id' => $department->id,
-                'name' => $department->name,
+                'name' => $department->getTranslation('name', $locale), // بترجع الترجمة حسب اللغة
                 'morning_Doctors_Count' => $morningDoctors,
                 'afternoon_Doctors_Count' => $afternoonDoctors,
             ];
         }
+
         return response()->json($data);
     }
 
