@@ -23,15 +23,20 @@ class DepartmentController extends Controller
 
     public function getAllDep()
     {
-        $departments = Department::query()
-            ->select('id', 'name->en as name') // هون منجيب الاسم الانكليزي فقط
-            ->get();
+        $departments = Department::all()->map(function ($dep) {
+            return [
+                'id' => $dep->id,
+                'name' => $dep->getTranslation('name', 'en'),
+            ];
+        });
 
         return response()->json([
             'message' => 'All departments',
             'departments' => $departments
         ]);
     }
+
+
 
     /**
      * Store a newly created resource in storage.

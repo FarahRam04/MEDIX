@@ -122,6 +122,7 @@ Route::middleware(['auth:sanctum','is_admin'])->group(function () {
 
     Route::controller(DepartmentController::class)->group(function (){
         Route::post('/departments/create', 'store');//add a department
+
         Route::put('/departments/{id}', 'update');
         Route::delete('/departments/{id}', 'destroy');//delete a department
         Route::get('/departments/{id}/show', 'show');
