@@ -40,7 +40,6 @@ Route::post('/user_login',[UserControllerAuth::class,'login']);
 
 //routes for all
 
-
 Route::get('/offers',[OfferController::class,'offers']);
 Route::get('/offer/{id}',[BookingPage::class,'offerDays']);
 Route::get('/offer_price',[OfferController::class,'offerPrice']);
@@ -161,7 +160,7 @@ Route::middleware(['auth:sanctum','is_admin_or_receptionist_or_doctor'])->group(
     Route::get('/dashboard/offers',[OOfferController::class,'index']);
     Route::get('/departments/doctors',[ DepartmentController::class,'index']);
     Route::get('/dashboard/appointment/{id}/show', [AAppointmentController::class, 'show']);
-    Route::get('/patients/index', [PPatientController::class, 'index']);
+    Route::get('/patients/index', [PPatientController::class, 'index']);//done
     Route::get('/patients/{id}/show', [PPatientController::class, 'show']);
     Route::post('/appointments/{id}/confirm-payment', [AAppointmentController::class, 'confirmPayment']);
 

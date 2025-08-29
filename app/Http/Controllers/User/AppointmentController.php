@@ -127,8 +127,8 @@ class AppointmentController extends Controller
         $data=[
             'Id'=> '# '.$appointment->id,
             'Status'=>$locale==='en'?$status:'غير مدفوعة',
-            'Payment Date'=>$status=== 'Unpaid'?'----' :Carbon::today()->format('YFd'),
-            'Payment Time'=>$status==='Unpaid'?'----': Carbon::now()->format('h:i A'),
+            'Payment Date'=>$status=== 'Unpaid'?'----' :$appointment->payment_date,
+            'Payment Time'=>$status==='Unpaid'?'----': $appointment->payment_time,
             'Payment Method'=>$locale==='en'?$payment_method:$payment_method_ar,
         ];
 

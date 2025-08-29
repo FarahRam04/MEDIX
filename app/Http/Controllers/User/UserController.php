@@ -111,7 +111,7 @@ class UserController extends Controller
     {
         $user=auth()->user();
         if (! $user->patient){
-            return response()->json([__('messages.vital_signs')],422);
+            return response()->json(['message'=>__('messages.vital_signs')],422);
         }
         return response()->json([
             'heart_rate'=>$user->patient->heart_rate,
