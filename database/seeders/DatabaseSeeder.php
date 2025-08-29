@@ -14,19 +14,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-       $this->call([DepartmentsSeeder::class]);
+//       $this->call([DepartmentsSeeder::class]);
         $this->call([RoleSeeder::class]);
        $this->call([AdminSeeder::class]);
-        $this->call([DaySeeder::class]);
-        $this->call([AvailableSlotsSeeder::class]);
-        $this->call([UserSeeder::class]);
-        $this->call([EmployeeSeeder::class]);
-        $this->call([AppointmentSeeder::class]);
-        $this->call([QualificationSeeder::class]);
-        $this->call([OffersSeeder::class]);
-        $this->call(VacationSeeder::class);
-        $this->call(NotificationSeeder::class);
-        $this->call([Additional_Cost_Seeder::class]);
+//        $this->call([DaySeeder::class]);
+//        $this->call([AvailableSlotsSeeder::class]);
+//        $this->call([UserSeeder::class]);
+//        $this->call([EmployeeSeeder::class]);
+//        $this->call([AppointmentSeeder::class]);
+//        $this->call([QualificationSeeder::class]);
+//        $this->call([OffersSeeder::class]);
+//        $this->call(VacationSeeder::class);
+//        $this->call(NotificationSeeder::class);
+//        $this->call([Additional_Cost_Seeder::class]);
     }
 
 }

@@ -62,6 +62,7 @@ Route::get('/most_rated_doctors',[DoctorController::class, 'getMostRatedDoctors'
 Route::get('/top5',[DoctorController::class, 'getTop5Doctors']);
 Route::get('/doctors/{id}/profile',[DoctorController::class, 'getDoctorProfile']);
 
+
 Route::get('/doctors/department/{id}',[DoctorController::class,'getDoctorsRelatedToDepartment']);
 Route::get('/appointment/{id}/bill',[AppointmentController::class,'testBill']);
 

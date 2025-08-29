@@ -18,7 +18,7 @@ class AdminSeeder extends Seeder
         $admins=[
             [
                 'name'=>'admin',
-                'email'=>'hebaabbas991@gmail.com',
+                'email'=>'farahrm2004@gmail.com',
                 'password'=>Hash::make('password'),
                 'role'=>'admin'
             ],
