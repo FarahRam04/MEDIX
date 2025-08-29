@@ -164,6 +164,7 @@ Route::middleware(['auth:sanctum','is_admin_or_receptionist_or_doctor'])->group(
     Route::get('/dashboard/appointment/{id}/show', [AAppointmentController::class, 'show']);
     Route::get('/patients/index', [PPatientController::class, 'index']);
     Route::get('/patients/{id}/show', [PPatientController::class, 'show']);
+    Route::post('/appointments/{id}/confirm-payment', [AAppointmentController::class, 'confirmPayment']);
 
 });
 
@@ -177,6 +178,7 @@ Route::middleware(['auth:sanctum','is_doctor'])->group(function () {
     Route::post('/appointments/{id}/upload-report', [DoctorController::class, 'uploadMedicalReport']);
     Route::get('/my-schedule', [AAppointmentController::class, 'getDoctorSchedule']);
     Route::put('/patients/{id}/vitals', [PPatientController::class, 'updateVitals']);
+    Route::get('/my-visits', [DoctorController::class, 'getDoctorVisits']);
 });
 //////////////////////////////////////////////////////////////////////////////////////////////////
 

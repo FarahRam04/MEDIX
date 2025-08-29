@@ -32,6 +32,10 @@ return new class extends Migration
             $table->unsignedBigInteger('init_total_price')->nullable();
             $table->unsignedBigInteger('final_total_price')->nullable();
             $table->boolean('payment_status')->default(false);
+            $table->date('payment_date')->nullable();
+            $table->time('payment_time')->nullable();
+
+
 
 
             $table->boolean('is_prescription_viewed')->default(false);

@@ -367,15 +367,15 @@ class AAppointmentController extends Controller
         }
 
         $appointment->payment_status = true;
-
-        $appointment->payment_date = now();
-
+        $appointment->payment_date = now()->toDateString();
+        $appointment->payment_time = now()->toTimeString();
         $appointment->save();
 
         return response()->json([
             'message' => 'Payment confirmed successfully.',
             'appointment_id' => $appointment->id,
-            'new_payment_status' => 'Paid'
+            'new_payment_status' => 'Paid',
+            'appointment'=>$appointment
         ], 200);
     }
 

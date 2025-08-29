@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\Dashboard;
 use App\HelperFunctions;
 use App\Http\Requests\WritePrescriptionRequest;
+use App\Http\Resources\DashboardAppointmentResource;
 use App\Http\Resources\DoctorResource;
 use App\Http\Resources\HomeResource;
+use App\Http\Resources\VisitResource;
 use App\Models\Advice;
 use App\Models\Appointment;
 use App\Models\Department;
 use App\Models\LabTest;
 use App\Models\Qualification;
 use App\Models\Surgery;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -528,5 +531,37 @@ class DoctorController extends Controller
     }
 
 
+    public function getDoctorVisits(Request $request)
+    {
+        $doctor = Auth::user()->doctor;
+        if (!$doctor) {
+            return response()->json(['message' => 'Doctor profile not found.'], 404);
+        }
 
+        $query = Appointment::where('doctor_id', $doctor->id)
+            ->where('status->en', 'completed')
+            ->with([
+                'patient.user',
+                'slot',
+                'medications',
+                'labTests',
+                'surgeries',
+                'advices',
+                'additional_costs'
+            ]);
+
+
+        if ($request->has('date')) {
+            $query->whereDate('date', $request->date);
+        } else {
+            $query->whereDate('date', Carbon::today());
+        }
+
+        $visits = $query->orderBy('date', 'desc')
+            ->orderBy('slot_id', 'desc')
+            ->paginate(20);
+
+
+        return VisitResource::collection($visits);
+    }
 }

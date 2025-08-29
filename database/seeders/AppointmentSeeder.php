@@ -68,6 +68,11 @@ class AppointmentSeeder extends Seeder
                 ->exists();
             if ($conflict) continue;
 
+            $isPaid = false;
+            if ($status === 'completed') {
+                // لنجعل 70% من المواعيد المكتملة مدفوعة، و 30% غير مدفوعة
+                $isPaid = $faker->boolean(70);
+            }
             $data=[
                 'doctor_id' => $doctor->id,
                 'patient_id' => $patient->id,
@@ -77,9 +82,13 @@ class AppointmentSeeder extends Seeder
                 'type' => $faker->randomElement(['check_up', 'follow_up']),
                 'specialization' => $doctor->department->name ?? 'General',
                 'status' => $status,
-                'payment_status' => $status === 'completed',
+                'payment_status' =>  $isPaid,
                 'with_medical_report' => $status === 'completed' && ($appointmentsCreated === 0 || $faker->boolean(30)),
             ];
+            if ($isPaid) {
+                $data['payment_date'] = $date; // يمكن استخدام نفس تاريخ الموعد كافتراض
+                $data['payment_time'] = $faker->time('H:i:s');
+            }
             if ($data['type'] === 'check_up') {
                 $total_price=50000;
                 if ($data['with_medical_report']) {
