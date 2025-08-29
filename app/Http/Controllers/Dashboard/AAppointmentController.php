@@ -74,12 +74,11 @@ class AAppointmentController extends Controller
             'doctor_id' => 'required|exists:doctors,id',
             'date' => 'required|date|after_or_equal:today',
             'slot_id' => 'required|exists:available_slots,id',
-            'request_type_id' => 'required|in:1,2', // 1 for check_up, 2 for follow_up
+            'request_type_id' => 'required|in:1,2',
             'with_medical_report' => 'sometimes|boolean',
-            'offer_id' => 'nullable|exists:offers,id', // العرض اختياري
+            'offer_id' => 'nullable|exists:offers,id',
         ]);
 
-        // استخدام transaction لضمان تنفيذ كل العمليات معاً أو لا شيء
         try {
             $appointment = DB::transaction(function () use ($validatedData, $request) {
 
@@ -89,12 +88,8 @@ class AAppointmentController extends Controller
 
                 $this->validateAppointmentLogic($validatedData, $doctor, $patient);
 
-                // 2. حساب السعر
-                $finalPrice = $this->calculateAppointmentPrice($validatedData);
 
-                // --------------------------------------------------
-                // 4. إنشاء الموعد في قاعدة البيانات
-                // --------------------------------------------------
+                $finalPrice = $this->calculateAppointmentPrice($validatedData);
                 $newAppointment = Appointment::create([
                     'patient_id' => $patient->id,
                     'department_id' => $validatedData['department_id'],

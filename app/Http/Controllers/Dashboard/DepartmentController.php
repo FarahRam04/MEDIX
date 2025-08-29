@@ -21,6 +21,17 @@ class DepartmentController extends Controller
         return DepartmentResource::collection($departments);
     }
 
+    public function getAllDep()
+    {
+        $departments = Department::query()
+            ->select('id', 'name->en as name') // هون منجيب الاسم الانكليزي فقط
+            ->get();
+
+        return response()->json([
+            'message' => 'All departments',
+            'departments' => $departments
+        ]);
+    }
 
     /**
      * Store a newly created resource in storage.

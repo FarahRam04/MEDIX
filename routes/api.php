@@ -46,6 +46,7 @@ Route::get('/offer_price',[OfferController::class,'offerPrice']);
 
 Route::get('/doctors',[DoctorController::class, 'index']);
 Route::get('/doctors/{id}',[DoctorController::class, 'show']);
+Route::get('/departments_all',[DepartmentController::class,'getAllDep']);
 
 Route::get('/departments',[BookingPage::class, 'departments']);//get all departments
 Route::get('/default_days',[BookingPage::class, 'getNextFiveDays']);//get default days

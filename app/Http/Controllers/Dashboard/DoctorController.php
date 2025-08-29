@@ -559,4 +559,7 @@ class DoctorController extends Controller
 
         return VisitResource::collection($visits);
     }
+    public  function  getProfileDoctor(){
+
+    }
 }
