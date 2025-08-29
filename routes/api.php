@@ -156,7 +156,7 @@ Route::middleware(['auth:sanctum', 'is_admin_or_receptionist'])->group(function 
     Route::get('/dashboard/appointments', [AAppointmentController::class, 'index']);
     Route::get('/vacations', [VacationController::class,'index']);
     Route::get('/users',[UserController::class, 'index']);//get all users
-
+    Route::post('/appointments/{id}/confirm-payment', [AAppointmentController::class, 'confirmPayment']);
 });
 /////////////////////////////////////////////////////////////////////////////////////////////
 Route::middleware(['auth:sanctum','is_admin_or_receptionist_or_doctor'])->group(function () {
@@ -165,7 +165,7 @@ Route::middleware(['auth:sanctum','is_admin_or_receptionist_or_doctor'])->group(
     Route::get('/dashboard/appointment/{id}/show', [AAppointmentController::class, 'show']);
     Route::get('/patients/index', [PPatientController::class, 'index']);//done
     Route::get('/patients/{id}/show', [PPatientController::class, 'show']);
-    Route::post('/appointments/{id}/confirm-payment', [AAppointmentController::class, 'confirmPayment']);
+
 
 });
 
