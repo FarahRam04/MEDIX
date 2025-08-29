@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\HelperFunctions;
 use App\Http\Requests\WritePrescriptionRequest;
 use App\Http\Resources\DashboardAppointmentResource;
+use App\Http\Resources\DoctorProfileDashboard;
 use App\Http\Resources\DoctorResource;
 use App\Http\Resources\HomeResource;
 use App\Http\Resources\VisitResource;
@@ -429,6 +430,14 @@ class DoctorController extends Controller
         }
         return new DoctorResource($doctor);
     }
+    public  function  getDoctorProfileDashboard($id){
+        $doctor=Doctor::with('employee.time','department','qualifications')->find($id);
+        if (!$doctor) {
+            return  response()->json(['doctor not found.']);
+        }
+        return new DoctorProfileDashboard($doctor);
+
+    }
     public function getDoctorsRelatedToDepartment(Request $request, $id)
     {
         $request->validate([
@@ -559,7 +568,5 @@ class DoctorController extends Controller
 
         return VisitResource::collection($visits);
     }
-    public  function  getProfileDoctor(){
 
-    }
 }

@@ -39,6 +39,7 @@ Route::post('/user_register',[UserControllerAuth::class,'register']);
 Route::post('/user_login',[UserControllerAuth::class,'login']);
 
 //routes for all
+Route::get('/doctor/profile/{id}',[DoctorController::class,'getDoctorProfileDashboard']);
 
 Route::get('/offers',[OfferController::class,'offers']);
 Route::get('/offer/{id}',[BookingPage::class,'offerDays']);
