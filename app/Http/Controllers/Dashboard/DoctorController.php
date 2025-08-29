@@ -432,30 +432,45 @@ class DoctorController extends Controller
     public function getDoctorsRelatedToDepartment(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:morning,afternoon'
+            'status'  => 'required|in:morning,afternoon',
+            'keyword' => 'nullable|string'
         ]);
 
+        $locale = app()->getLocale();
         $startTime = $request->status === 'morning' ? '09:00:00' : '14:00:00';
 
-        $doctors = Doctor::with(['employee.time'])
+        $query = Doctor::with(['employee.time'])
             ->where('department_id', $id)
-            ->whereHas('employee.time', fn($q) => $q->where('start_time', $startTime))
-            ->get()
-            ->map(function ($doctor){
-                $locale=app()->getLocale();
-                return[
-                    'id'=>$doctor->id,
-                    'name'=>$doctor->employee->first_name.' '.$doctor->employee->last_name,
-                    'image'=>$doctor->image_url,
-                    'shift'=>$doctor->employee->time->start_time === '09:00:00' ? ($locale==='en'?'morning':'صباحي' ):($locale==='en'?'afternoon':'مسائي'),
-                    'treatments'=>$doctor->number_of_treatments,
-                    'experience'=>$doctor->years_of_experience,
-                    'rate'=>$doctor->final_rating
-                ];
+            ->whereHas('employee.time', fn($q) => $q->where('start_time', $startTime));
+
+        // إذا في كلمة مفتاحية نفلتر على علاقة الـ employee
+        if ($request->filled('keyword')) {
+            $keyword = $request->input('keyword');
+
+            $query->whereHas('employee', function ($q) use ($keyword, $locale) {
+                $q->where("first_name->{$locale}", 'LIKE', "%{$keyword}%")
+                    ->orWhere("last_name->{$locale}", 'LIKE', "%{$keyword}%");
             });
+        }
+
+        $doctors = $query->get()->map(function ($doctor) use ($locale) {
+            return [
+                'id'         => $doctor->id,
+                'name'       => ($doctor->employee->getTranslation('first_name', $locale) ?? '')
+                    . ' ' .
+                    ($doctor->employee->getTranslation('last_name', $locale) ?? ''),
+                'image'      => $doctor->image_url,
+                'shift'      => $doctor->employee->time->start_time === '09:00:00'
+                    ? ($locale === 'en' ? 'morning' : 'صباحي')
+                    : ($locale === 'en' ? 'afternoon' : 'مسائي'),
+                'treatments' => $doctor->number_of_treatments,
+                'experience' => $doctor->years_of_experience,
+                'rate'       => $doctor->final_rating,
+            ];
+        });
+
         return response()->json($doctors);
     }
-
 
 
     public function uploadMedicalReport(Request $request, $id)
@@ -508,27 +523,7 @@ class DoctorController extends Controller
         ], 200);
     }
 
-    public function search(Request $request)
-    {
-        $request->validate([
-            'keyword'=>'required|string'
-        ]);
 
-        $locale = app()->getLocale();
-        $keyword = $request->input('keyword');
-
-        $results = DB::table('departments')
-            ->where("name->{$locale}", 'LIKE', "%{$keyword}%")
-            ->get()
-            ->map(function ($item) use ($locale) {
-                return [
-                    'id'   => $item->id,
-                    'name' => json_decode($item->name, true)[$locale] ?? null,
-                ];
-            });
-
-        return response()->json($results);
-    }
 
 
     public function getDoctorVisits(Request $request)

@@ -10,6 +10,7 @@ use App\Models\Appointment;
 use App\Services\AppointmentService;
 use Carbon\Carbon;
 use Google\Service\AdMob\App;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Stichoza\GoogleTranslate\GoogleTranslate;
 
@@ -19,61 +20,78 @@ class AppointmentController extends Controller
 
     public function getPatientAppointments(Request $request)
     {
-        // تحقق من أن المستخدم الحالي هو مريض
         $user = auth()->user();
-        $request->validate(['status'=>'required|in:pending,completed']);
-        $status = $request->query('status');
+
+        $request->validate([
+            'status'  => 'required|in:pending,completed',
+            'keyword' => 'nullable|string'
+        ]);
 
         if (!$user->patient) {
-            return response()->json(['data'=>[]], 200);
+            return response()->json(['data' => []], 200);
         }
 
         $patient = $user->patient;
-        $appointments = Appointment::with(['doctor.employee.user', 'slot'])
+        $locale  = app()->getLocale();
+        $status  = $request->query('status');
+
+        $query = Appointment::with(['doctor.employee.user', 'doctor.department', 'slot'])
             ->where('patient_id', $patient->id)
-            ->where('status->en', $status)
-            ->orderBy('date', 'desc')
-            ->get();
+            ->where("status->en", $status);
+
+        $this->keyword($request, $query, $locale);
+
+        $appointments = $query->orderBy('date', 'desc')->get();
 
         return AppointmentResource::collection($appointments);
     }
 
     public function getUserBills(Request $request)
     {
-        $user=auth()->user();
-        $request->validate(['status'=>'required|in:unpaid,paid']);
-        $status = $request->query('status') === 'unpaid' ? 0 : 1 ;
+        $user = auth()->user();
+
+        $request->validate(['status' => 'required|in:unpaid,paid']);
+        $status = $request->query('status') === 'unpaid' ? 0 : 1;
 
         if (!$user->patient) {
             return response()->json([], 200);
         }
 
-        $appointments=Appointment::with(['doctor','department','slot'])
-            ->where('patient_id',$user->patient->id)
-            ->where('payment_status', $status)
-            ->orderBy('id', 'asc')
-            ->get();
-        $allData=[];
-        $locale=app()->getLocale();
+        $locale = app()->getLocale();
 
+        // نجهز الاستعلام (Query Builder)
+        $query = Appointment::with(['doctor.employee.user', 'doctor.department', 'slot'])
+            ->where('patient_id', $user->patient->id)
+            ->where('payment_status', $status);
+
+        // إذا في كلمة بحث
+        $this->keyword($request, $query, $locale);
+
+        // تنفيذ الاستعلام
+        $appointments = $query->orderBy('id', 'asc')->get();
+
+        // تجهيز البيانات للإرجاع
+        $allData = [];
         foreach ($appointments as $appointment) {
-            $data=[
+            $data = [
                 'id' => $appointment->id,
-                'status' => $appointment->payment_status === 0 ? ($locale==='en'?'unpaid':'غير مدفوعة') : ($locale==='en'?'paid':'مدفوعة'),
-                'total_price'=>$appointment->final_total_price,
-                'currency' => $locale==='en'?'SYP':'ليرة سورية',
-                'doctor_name' => $appointment->doctor->employee->first_name . ' ' . $appointment->doctor->employee->last_name,
-                'department' => $appointment->department->name,
+                'status' => $appointment->payment_status === 0
+                    ? ($locale === 'en' ? 'unpaid' : 'غير مدفوعة')
+                    : ($locale === 'en' ? 'paid' : 'مدفوعة'),
+                'total_price' => $appointment->final_total_price,
+                'currency' => $locale === 'en' ? 'SYP' : 'ليرة سورية',
+                'doctor_name' => $appointment->doctor->employee->getTranslation('first_name', $locale)
+                    . ' ' .
+                    $appointment->doctor->employee->getTranslation('last_name', $locale),
+                'department' => $appointment->doctor->department->getTranslation('name', $locale),
                 'appointment_date_time' => Carbon::parse(
                     $appointment->date . ' ' . optional($appointment->slot)->start_time
                 )->format('Y-m-d\TH:i:s')
             ];
 
-
-            $allData[]=$data;
-
-
+            $allData[] = $data;
         }
+
         return response()->json($allData, 200);
     }
 
@@ -252,6 +270,29 @@ class AppointmentController extends Controller
             'medical report url'=>$appointment->medical_report_path ? asset('storage/'.$appointment->medical_report_path) :null,
         ]);
 
+    }
+
+    /**
+     * @param Request $request
+     * @param Builder $query
+     * @param string $locale
+     * @return void
+     */
+    public function keyword(Request $request, Builder $query, string $locale): void
+    {
+        if ($request->filled('keyword')) {
+            $keyword = $request->input('keyword');
+
+            $query->where(function ($q) use ($keyword, $locale) {
+                $q->whereHas('doctor.employee', function ($sub) use ($keyword, $locale) {
+                    $sub->where("first_name->{$locale}", 'LIKE', "%{$keyword}%")
+                        ->orWhere("last_name->{$locale}", 'LIKE', "%{$keyword}%");
+                })
+                    ->orWhereHas('doctor.department', function ($sub) use ($keyword, $locale) {
+                        $sub->where("name->{$locale}", 'LIKE', "%{$keyword}%");
+                    });
+            });
+        }
     }
 
 }
