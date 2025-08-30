@@ -33,13 +33,13 @@ class UserSeeder extends Seeder
 
             Patient::create([
                 'user_id' => $user->id,
-                'heart_rate'=>null,
-    'blood_group'=>null,
-    'temperature'=>null,
-    'weight'=>null,
-    'height'=>null,
-    'pressure'=>null,
-    'blood_sugar'=>null
+                'heart_rate'=>'100',
+    'blood_group'=>'A+',
+    'temperature'=>'37.5',
+    'weight'=>'60',
+    'height'=>'165',
+    'pressure'=>'120/80',
+    'blood_sugar'=>'30'
             ]);
         }
     }
