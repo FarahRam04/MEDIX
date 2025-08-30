@@ -40,21 +40,15 @@ trait HelperFunctions
     public function getSpecialists():array
     {
          return [
-            1 => 'General Practitioner',
+            1 => 'Ophthalmologist',
             2 => 'Cardiologist',
             3 => 'Dermatologist',
             4 => 'Gastroenterologist',
-            5 => 'neurologist',
-            6 => 'pediatrician',
-            7 =>  'ophthalmologist'
+            5 => 'Neurologist',
+            6 => 'Pediatrician',
         ];
     }
 
-    function convertToArabicNumbers($number) {
-        $western = ['0','1','2','3','4','5','6','7','8','9'];
-        $arabic  = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
-        return  str_replace($western, $arabic, $number);
-    }
 
 
 }

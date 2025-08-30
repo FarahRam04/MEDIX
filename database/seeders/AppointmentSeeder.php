@@ -8,6 +8,7 @@ use App\Models\Doctor;
 use App\Models\Appointment;
 use Faker\Factory as Faker;
 use Carbon\Carbon;
+use Stichoza\GoogleTranslate\GoogleTranslate;
 
 class AppointmentSeeder extends Seeder
 {
@@ -18,8 +19,8 @@ class AppointmentSeeder extends Seeder
         $doctors = Doctor::with(['department', 'employee.time.days', 'availableSlots'])->get();
 
         // توليد المواعيد لكل حالة status
-        $this->createAppointments('pending', 40, $patients, $doctors, $faker, true);    // مواعيد حالية/مستقبلية
-        $this->createAppointments('completed', 40, $patients, $doctors, $faker, false); // مواعيد سابقة
+        $this->createAppointments('pending', 30, $patients, $doctors, $faker, true);    // مواعيد حالية/مستقبلية
+        $this->createAppointments('completed', 30, $patients, $doctors, $faker, false); // مواعيد سابقة
     }
 
 
@@ -69,10 +70,14 @@ class AppointmentSeeder extends Seeder
             if ($conflict) continue;
 
             $isPaid = false;
-            if ($status === 'completed') {
+            if ($status === 'completed')
+            {
                 // لنجعل 70% من المواعيد المكتملة مدفوعة، و 30% غير مدفوعة
                 $isPaid = $faker->boolean(70);
             }
+            $tr=new GoogleTranslate();
+            $tr->setSource('en');
+            $tr->setTarget('ar');
             $data=[
                 'doctor_id' => $doctor->id,
                 'patient_id' => $patient->id,
@@ -81,7 +86,7 @@ class AppointmentSeeder extends Seeder
                 'slot_id' => $slot->id,
                 'type' => $faker->randomElement(['check_up', 'follow_up']),
                 'specialization' => $doctor->department->name ?? 'General',
-                'status' => $status,
+                'status' => ['en'=>$status, 'ar'=>$tr->translate($status)],
                 'payment_status' =>  $isPaid,
                 'with_medical_report' => $status === 'completed' && ($appointmentsCreated === 0 || $faker->boolean(30)),
             ];
@@ -102,8 +107,10 @@ class AppointmentSeeder extends Seeder
                     $total+=20000;
                 }
                 $data['final_total_price'] = $total;
+
+                $medical_reports=['m1.pdf','m2.pdf','m3.pdf'];
                 if ($data['with_medical_report']) {
-                    $data['medical_report_path'] = 'medical_reports/' . $faker->bothify('????????##.pdf');
+                    $data['medical_report_path'] = 'medical_reports/'.$medical_reports[rand(0,count($medical_reports)-1)]; ;
                 }
             }
 

@@ -11,28 +11,27 @@ use App\Models\Time;
 use Spatie\Permission\Models\Role;
 use Faker\Factory as Faker;
 use App\HelperFunctions;
+use Stichoza\GoogleTranslate\GoogleTranslate;
+
 class EmployeeSeeder extends Seeder
 {
     use HelperFunctions;
+
     public function run()
     {
-        $departmentSpecialists=$this->getSpecialists();
-
-//        $departmentSpecialists = [
-//            1 => 'General Practitioner',
-//            2 => 'Cardiologist',
-//            3 => 'Dermatologist',
-//            4 => 'Gastroenterologist',
-//            5 => 'neurologist',
-//            6 => 'pediatrician',
-//        ];
-
+        $departmentSpecialists = $this->getSpecialists();
         $faker = Faker::create();
+
+        // مترجم جوجل
+        $tr = new GoogleTranslate();
+        $tr->setSource('en');
+        $tr->setTarget('ar');
 
         $doctorRole = Role::firstOrCreate(['name' => 'doctor']);
         $receptionistRole = Role::firstOrCreate(['name' => 'receptionist']);
 
-        $departments = [2, 3, 4, 5, 6];
+        // صار يشمل القسم الأول
+        $departments = [1, 2, 3, 4, 5, 6];
 
         $firstThreeDays = [0, 1, 2]; // الأحد، الإثنين، الثلاثاء
         $lastFourDays = [3, 4, 5, 6]; // الأربعاء - السبت
@@ -43,10 +42,12 @@ class EmployeeSeeder extends Seeder
             for ($i = 0; $i < 4; $i++) {
                 $firstName = $faker->firstNameMale;
                 $lastName = $faker->lastName;
-
+                $tr=new GoogleTranslate();
+                $tr->setSource('en');
+                $tr->setTarget('ar');
                 $doctor = Employee::create([
-                    'first_name' => $firstName,
-                    'last_name' => $lastName,
+                    'first_name' => ['en'=>$firstName, 'ar'=>$tr->translate($firstName)],
+                    'last_name' => ['en'=>$lastName,'ar'=>$tr->translate($lastName)],
                     'email' => "heba.doc.200{$doctorIndex}@gmail.com",
                     'password' => Hash::make('password'),
                     'role' => 'doctor',
@@ -54,8 +55,15 @@ class EmployeeSeeder extends Seeder
                 ]);
                 $doctor->assignRole($doctorRole);
 
-                $specialist = $departmentSpecialists[$departmentId];
+                // الترجمة للاختصاص
+                $specialistEn = $departmentSpecialists[$departmentId];
+                $specialistAr = $tr->translate($specialistEn);
+
                 $years_of_experience = 3 + $doctorIndex;
+
+                // الترجمة للبايو
+                $bioEn = "Dr. $firstName $lastName has over $years_of_experience years of experience in $specialistEn.";
+                $bioAr = $tr->translate($bioEn);
 
                 $doctorModel = Doctor::create([
                     'employee_id' => $doctor->id,
@@ -64,9 +72,9 @@ class EmployeeSeeder extends Seeder
                     'years_of_experience' => $years_of_experience,
                     'medical_license_number' => "MLN-1000$doctorIndex",
                     'image' => "doctors/doctor$doctorIndex.png",
-                    'specialist' => $specialist,
+                    'specialist' => ['en' => $specialistEn, 'ar' => $specialistAr],
                     'number_of_treatments' => $faker->numberBetween(0, 100),
-                    'bio' => "Dr. $firstName $lastName has over $years_of_experience years of experience in $specialist.",
+                    'bio' => ['en' => $bioEn, 'ar' => $bioAr],
                 ]);
 
                 $isMorning = ($i % 2 === 0);
@@ -100,8 +108,7 @@ class EmployeeSeeder extends Seeder
 
                 $doctorIndex++;
             }
-        }
-
+        }// Receptionists
         for ($j = 1; $j <= 8; $j++) {
             $receptionist = Employee::create([
                 'first_name' => "ReceptionistFirst$j",

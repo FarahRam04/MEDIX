@@ -263,7 +263,8 @@ class AppointmentController extends Controller
             return response()->json(['message' => 'Appointment not found.'], 404);
         }
         if ($appointment->patient->user_id !== auth()->id()) {
-            return response()->json(['message' => 'You are not authorized to view this appointment.'], 403);
+            return response()->json(['message' => 'You are not authorized to view this appointment.'
+            ], 403);
         }
 
         return response()->json([

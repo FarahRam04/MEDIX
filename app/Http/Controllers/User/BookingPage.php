@@ -167,6 +167,7 @@ class BookingPage extends Controller
                 ->where('start_day', '<=', $date->toDateString())
                 ->where('end_day', '>', $date->toDateString())
                 ->exists();
+
             if (in_array($dayId, $doctorDays) && !$hasVacation) {
                 $day['isAvailable'] = true;
             }
